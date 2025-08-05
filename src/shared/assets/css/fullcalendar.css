@@ -1,0 +1,5 @@
+.fc-col-header-cell, .fc-day-header {
+    background: transparent !important;
+    /* İstersen kenarlıkları da kaldırabilirsin */
+    border: none !important;
+  }

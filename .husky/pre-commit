@@ -1,0 +1,11 @@
+echo "Running Next.js build to check for errors..."
+
+npm run build
+
+if [ $? -ne 0 ]; then
+  echo "Next.js build failed. Commit aborted."
+  exit 1
+fi
+
+echo "Next.js build successful. Proceeding with commit."
+exit 0 

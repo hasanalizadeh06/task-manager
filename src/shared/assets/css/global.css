@@ -1,0 +1,218 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+:root {
+  --font-euclid: "Euclid Circular A", sans-serif;
+}
+
+.custom-quill-container .ql-editor {
+  height: 80px;
+  border-radius: 16px;
+  opacity: 1;
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  border: none;
+  outline: none;
+}
+
+.custom-quill-container .ql-toolbar {
+  border-radius: 16px 16px 0 0;
+  background: #ffffff1a;
+  border: none;
+  padding: 8px 16px;
+}
+
+.custom-quill-container .ql-container {
+  border-radius: 0 0 16px 16px;
+  border: none;
+  font-family: inherit;
+  background: #ffffff1a;
+  padding-right:5px;
+  padding-bottom: 5px;
+}
+
+.custom-quill-container .ql-toolbar .ql-picker {
+  color: #fff !important;
+}
+
+.custom-quill-container .ql-toolbar .ql-picker-options {
+  background: #ffffff; 
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.custom-quill-container .ql-toolbar .ql-picker-item {
+  color: #000 !important; 
+  padding: 8px 12px;
+}
+
+.custom-quill-container .ql-toolbar .ql-picker-item:hover {
+  background-color: #f5f5f5;
+  color: #000 !important;  
+}
+
+.custom-quill-container .ql-toolbar .ql-picker-item.ql-selected {
+  background-color: #e5e5e5;
+  color: #000 !important;  
+}
+
+.custom-quill-container .ql-toolbar .ql-formats {
+  margin-right: 32px; 
+}
+
+.custom-quill-container .ql-toolbar button {
+  color: #fff !important;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.custom-quill-container .ql-toolbar button:hover {
+  background-color: #2d3748;
+}
+
+.custom-quill-container .ql-toolbar button.ql-active {
+  background-color: #2d3748;
+  color: #ffffff;
+}
+
+.custom-quill-container .ql-toolbar button svg {
+  fill: #fff !important;
+  stroke: #fff !important;
+}
+
+.custom-quill-container .ql-toolbar button:hover svg {
+  fill: #fff !important;
+  stroke: #fff !important;
+}
+
+.custom-quill-container .ql-toolbar button.ql-active svg {
+  fill: #fff !important;
+  stroke: #fff !important;
+}
+
+.custom-quill-container .ql-toolbar .ql-stroke {
+  stroke: #fff !important;
+}
+
+.custom-quill-container .ql-toolbar .ql-fill {
+  fill: #fff !important;
+}
+
+.custom-quill-container .ql-toolbar .ql-even {
+  fill: #fff !important;
+  stroke: #fff !important;
+}
+
+.custom-quill-container .ql-toolbar .ql-color,
+.custom-quill-container .ql-toolbar .ql-background {
+  fill: #fff !important;
+  stroke: #fff !important;
+}
+
+.custom-quill-container .ql-editor.ql-blank::before {
+  color: #718096;
+  font-style: normal;
+  opacity: 0.7;
+}
+
+.custom-quill-container .ql-editor,
+.custom-quill-container .ql-toolbar,
+.custom-quill-container .ql-container {
+  border: none !important;
+}
+
+.custom-quill-container .ql-editor::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-quill-container .ql-editor::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-quill-container .ql-editor::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.custom-quill-container {
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+@theme {
+  /* Solid Colors */
+  --color-secondary: #d1e3a5;
+  --color-tertiary: #cad9c1;
+  --color-black: #1f1f1e;
+  --color-white: #ffffff;
+  --color-red: #df1811;
+  --color-yellow: #f2e713;
+  --color-blue: #4285f4;
+  --color-dark-green: #50af11;
+  --color-mid-green: #77d638;
+  --color-light-green: #8dfd43;
+  --color-light-gray: #f2f2f2;
+  --color-blue-gray: #556f79;
+
+
+  /* Opacity-based Colors */
+  --color-white-10: rgba(255, 255, 255, 0.1);
+  --color-white-05: rgba(255, 255, 255, 0.05);
+  --color-black-05: rgba(0, 0, 0, 0.05);
+  /* For shadows */
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(to right,
+      #0f2027 0%,
+      #25434f 50%,
+      #203a43 100%);
+
+  --gradient-secondary: linear-gradient(to bottom,
+      #101e23 0%,
+      #2c4954 100%,
+    );
+
+  --gradient-linear-green: linear-gradient(to right,
+      #6fcf2f 0%,
+      #abff74 50%,
+      #6fcf2f 100%);
+
+  /* Shadows (as variables for box-shadow property) */
+  --shadow-1: 0 4px 10px rgba(0, 0, 0, 0.05);
+  /* Y offset, Blur, Color */
+  --shadow-2: 0 4px 5px rgba(0, 0, 0, 0.05);
+  /* Y offset, Blur, Color */
+}
+
+
+.scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+
+
+/*Reset calendar default colors*/
+/*.react-calendar {*/
+/*  @apply w-full rounded-xl;*/
+/*}*/
+/*.react-calendar__tile--active {*/
+/*  @apply bg-blue-500 text-white rounded-lg;*/
+/*}*/
+/*.react-calendar__tile--now {*/
+/*  @apply bg-gray-200;*/
+/*}*/

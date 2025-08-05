@@ -1,0 +1,16 @@
+export const FONT_SIZES = {
+  h1: "text-[40px]",
+  h2: "text-[36px]",
+  h3: "text-[32px]",
+  h4: "text-[28px]",
+  h5: "text-[24px]",
+  h6: "text-[20px]",
+  b1: "text-[16px]",
+  b2: "text-[14px]",
+  b3: "text-[12px]",
+  "btn-sm": "text-[14px]",
+  "btn-lg": "text-[16px]",
+  s1: "text-[20px]",
+  s2: "text-[16px]",
+  s3: "text-[12px]",
+} as const;
