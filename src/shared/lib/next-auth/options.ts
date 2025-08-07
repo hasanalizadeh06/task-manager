@@ -9,7 +9,7 @@ export async function registerUser(
   email: string,
   password: string
 ) {
-  const role = "USER";
+  const role = "user";
   return clxRequest.post(`/auth/register`, {
     firstName,
     lastName,
