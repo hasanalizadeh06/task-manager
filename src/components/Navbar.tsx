@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef } from "react";
+import React, { useRef, useCallback } from "react";
 import { IoMdSearch } from "react-icons/io";
 import Breadcrumb from "./Breadcrumb";
 import Image from "next/image";
@@ -61,7 +61,7 @@ function Navbar() {
     router.replace("/");
   };
 
-    const fetchProfile = async () => {
+    const fetchProfile = useCallback(async () => {
       const cookies = parseCookies();
       const accessToken = cookies.accessToken;
       if (!accessToken) return;
@@ -73,14 +73,16 @@ function Navbar() {
         });
         setProfile(data);
       } catch (error) {
-        cookies.accessToken && setCookie(null, "accessToken", "", { path: "/" });
+        if (cookies.accessToken) {
+          setCookie(null, "accessToken", "", { path: "/" });
+        }
         router.replace("/login");
         console.error(error);
       }
-    };
+    }, [router]);
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [fetchProfile]);
 
   return (
     <div className="bg-[#ffffff1a] rounded-2xl text-white w-full px-6 py-[28px] flex justify-between items-center shadow">

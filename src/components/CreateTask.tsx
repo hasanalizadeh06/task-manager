@@ -254,19 +254,19 @@ function CreateTask({
 
   const onSubmit = async (data: z.infer<typeof createTaskSchema>) => {
     try {
-      // Map payload keys to backend requirements
+      // Map payload keys to backend requirements using destructuring (safer approach)
+      const { timeEstimate, sprint, ...restData } = data;
+      
       const payload = {
-        ...data,
+        ...restData,
         description,
         projectId: id,
-        estimatedTime: data.timeEstimate,
+        estimatedTime: timeEstimate,
         actualTime: data.actualTime,
         tags: allTags,
-        sprintId: data.sprint,
+        sprintId: sprint,
       };
-      // Remove old keys
-      delete payload.timeEstimate;
-      delete payload.sprint;
+      
       setAllTags([]); // Clear tags after submission
       const { accessToken } = parseCookies();
       const response: Task = await clxRequest.post("tasks", payload, {
@@ -278,12 +278,13 @@ function CreateTask({
       }
       setIsOpen(false);
       reset();
-        } catch (error: any) {
-      if (error?.response?.data?.errors) {
+        } catch (error: unknown) {
+      const errorResponse = error as { response?: { data?: { errors?: Record<string, unknown> } } };
+      if (errorResponse?.response?.data?.errors) {
         // If backend returns validation errors, set them in form
-        Object.entries(error.response.data.errors).forEach(
+        Object.entries(errorResponse.response.data.errors).forEach(
           ([field, message]) => {
-            setError(field as any, {
+            setError(field as keyof z.infer<typeof createTaskSchema>, {
               type: "manual",
               message: String(message),
             });

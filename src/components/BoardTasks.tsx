@@ -71,7 +71,7 @@ const BoardTasks = () => {
               .then((data) => {
                 let filteredTasks: TasksByStatus;
                 if (project) {
-                    //@ts-expect-error
+                    //@ts-expect-error - Object.fromEntries type inference issue with filtered array
                     filteredTasks = Object.fromEntries(
                       Object.entries(data).map(([status, tasksArr]) => [
                       status,
@@ -91,7 +91,7 @@ const BoardTasks = () => {
               .catch((error) => {
                   console.error("Error fetching tasks:", error);
               });
-        }, [project, refreshFlag]);
+        }, [project, refreshFlag, setGlobalTasks]);
 
   // const [newColumnTitle, setNewColumnTitle] = useState("");
   // const [showNewColumnInput, setShowNewColumnInput] = useState(false);

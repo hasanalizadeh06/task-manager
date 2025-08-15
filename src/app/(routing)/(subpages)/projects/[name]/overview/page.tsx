@@ -55,7 +55,7 @@ function Page({ }) {
       .catch((error) => {
         console.error("Error fetching user tasks:", error);
       });
-      }, [project, refreshFlag]);
+      }, [project, refreshFlag, setGlobalTasks]);
   return (
     <div className="min-h-full h-auto rounded-2xl flex flex-col gap-5">
       <div className="flex gap-5">

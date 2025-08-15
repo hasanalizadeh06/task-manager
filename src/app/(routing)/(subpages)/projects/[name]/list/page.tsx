@@ -42,7 +42,7 @@ function Page() {
             .catch((error) => {
                 console.error("Error fetching tasks:", error);
             });
-          }, [project, refreshFlag]);
+          }, [project, refreshFlag, setGlobalTasks]);
   return (
         <div className='h-full'>
             <TaskList addable={false} tasks={tasks}/>
