@@ -23,6 +23,13 @@ export interface Subtask {
   taskId: string;
 }
 
+export interface TasksResponse {
+    items: Task[];
+    total: number;
+    page: number;
+    limit: number;
+}
+
 export interface UserTasksResponse {
     items: Array<{
         user: {

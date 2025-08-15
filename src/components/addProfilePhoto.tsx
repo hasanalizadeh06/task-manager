@@ -37,7 +37,7 @@ export function AddProfilePhotoDialog({
         try {
             const formData = new FormData();
             formData.append("file", selectedFile); 
-            await clxRequest.postForm("/profile/photo", formData, {
+            await clxRequest.postForm("profile/photo", formData, {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
                 },

@@ -5,11 +5,8 @@ type AuthPageProps = {
   type: "login" | "register";
 };
 import { useState } from "react";
-import { registerUser } from "@/shared/lib/next-auth/options";
 import img from "@/../public/images/login-walpaper.gif";
 import Image from "next/image";
-import Link from "next/link";
-import { FcGoogle } from "react-icons/fc";
 import { useRouter } from "next/navigation";
 import { clxRequest } from "@/shared/lib/api/clxRequest";
 import { AiOutlineEye } from "react-icons/ai";
@@ -25,7 +22,6 @@ function AuthPage({ type }: AuthPageProps) {
   useEffect(() => {
     const accessToken = searchParams.get("accessToken");
     if (accessToken) {
-      setCookie(null, "accessToken", accessToken);
       router.replace("/");
     }
   }, [searchParams, router]);
@@ -43,35 +39,36 @@ function AuthPage({ type }: AuthPageProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (type === "register") {
-      if (
-        !form.fullName ||
-        !form.email ||
-        !form.password ||
-        !form.repeatPassword
-      ) {
-        setError("Tüm alanları doldurun.");
-        return;
-      }
-      if (form.password !== form.repeatPassword) {
-        setError("Şifreler eşleşmiyor.");
-        return;
-      }
-      const [firstName, ...rest] = form.fullName.trim().split(" ");
-      const lastName = rest.join(" ");
-      try {
-        await registerUser(firstName, lastName, form.email, form.password);
-        router.replace("/login");
-      } catch {
-        setError("Kayıt başarısız.");
-      }
-    } else {
+    // if (type === "register") {
+    //   if (
+    //     !form.fullName ||
+    //     !form.email ||
+    //     !form.password ||
+    //     !form.repeatPassword
+    //   ) {
+    //     setError("Tüm alanları doldurun.");
+    //     return;
+    //   }
+    //   if (form.password !== form.repeatPassword) {
+    //     setError("Şifreler eşleşmiyor.");
+    //     return;
+    //   }
+    //   const [firstName, ...rest] = form.fullName.trim().split(" ");
+    //   const lastName = rest.join(" ");
+    //   try {
+    //     await registerUser(firstName, lastName, form.email, form.password);
+    //     router.replace("/login");
+    //   } catch {
+    //     setError("Kayıt başarısız.");
+    //   }
+    // } else
+    if (type === "login") {
       if (!form.email || !form.password) {
         setError("Tüm alanları doldurun.");
         return;
       }
       try {
-        const response = await clxRequest.post<LoginResponse>("/auth/login", {
+        const response = await clxRequest.post<LoginResponse>("auth/login", {
           email: form.email,
           password: form.password,
         });
@@ -88,15 +85,22 @@ function AuthPage({ type }: AuthPageProps) {
     }
   };
   return (
-    <div className="bg-gradient-to-b from-[#101e23] to-[#2c4954] h-screen text-white flex justify-center items-center">
+    <div
+      className="h-screen text-white flex justify-center items-center"
+      style={{
+        background: "linear-gradient(180deg, #0F2027 0%, #25434F 50%, #203A43 100%)",
+      }}
+    >
       <div className="form flex-1 flex flex-col justify-center h-full">
-        <div className="max-w-md w-full mx-auto bg-[#22343a]/70 rounded-xl p-8 shadow-lg">
+        <div
+          className="max-w-md h-[80vh] w-full mx-auto rounded-xl p-8 "
+        >
           <div className="mb-6">
             <h1 className="text-3xl font-bold mb-2">Logo</h1>
             <h2 className="text-xl font-semibold mb-4">
               Welcome{type === "register" ? "!" : " back!"}
             </h2>
-            <button
+            {/* <button
               onClick={() => (window.location.href = process.env.NEXT_PUBLIC_API_URL+"/auth/google")}
               className="w-full cursor-pointer flex items-center justify-center gap-2 bg-[#FFFFFF1A] hover:bg-[#FFFFFF2A] text-white py-2 rounded-lg font-medium mb-4"
             >
@@ -107,11 +111,11 @@ function AuthPage({ type }: AuthPageProps) {
               <div className="flex-1 h-px bg-gray-600" />
               <span className="mx-2 text-sm text-gray-400">Or use Email</span>
               <div className="flex-1 h-px bg-gray-600" />
-            </div>
+            </div> */}
           </div>
 
           <form onSubmit={handleSubmit}>
-            {type === "register" && (
+            {/* {type === "register" && (
               <div className="mb-4">
                 <label className="block text-xs font-semibold mb-1">
                   FULL NAME
@@ -125,7 +129,7 @@ function AuthPage({ type }: AuthPageProps) {
                   placeholder="Your Name"
                 />
               </div>
-            )}
+            )} */}
             <div className="mb-4">
               <label className="block text-xs font-semibold mb-1">EMAIL</label>
               <input
@@ -155,7 +159,7 @@ function AuthPage({ type }: AuthPageProps) {
                 </span>
               </div>
             </div>
-            {type === "register" && (
+            {/* {type === "register" && (
               <div className="mb-4">
                 <label className="block text-xs font-semibold mb-1">
                   REPEAT PASSWORD
@@ -174,20 +178,20 @@ function AuthPage({ type }: AuthPageProps) {
                   </span>
                 </div>
               </div>
-            )}
+            )} */}
             {error && <div className="text-red-400 text-xs mb-2">{error}</div>}
             <button
               type="submit"
-              className="w-full bg-lime-500 hover:bg-lime-600 text-white font-semibold py-3 rounded-lg mt-2 mb-3"
+              className="w-full bg-[#50AF11] hover:bg-lime-600 text-white font-semibold py-3 rounded-lg mt-2 mb-3"
             >
-              {type === "register" ? "SIGN UP" : "SIGN IN"}
+              {type === "register" ? "SIGN UP" : "LOG IN"}
             </button>
           </form>
           <p className="text-xs text-gray-400 mt-2 mb-4">
             Lorem ipsum dolor sit amet Lorem ipsum dolor sit ametLorem ipsum
             dolor sit ametLorem ipsum dolor sit amet
           </p>
-          <div className="text-center text-xs text-gray-300">
+          {/* <div className="text-center text-xs text-gray-300">
             Already have an account?{" "}
             <Link
               href={type === "register" ? "login" : "register"}
@@ -195,7 +199,7 @@ function AuthPage({ type }: AuthPageProps) {
             >
               {type === "register" ? "LOG IN" : "SIGN UP"}
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
       <div className="walpaper flex-1 h-full">

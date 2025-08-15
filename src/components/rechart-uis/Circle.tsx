@@ -47,18 +47,19 @@ function parseCustomSize(sizeStr: string) {
 const Circle: React.FC<CircleProps> = ({
   circleName,
   datas,
+  taskLength = 0,
   size = "md",
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
+  
   const processedData = datas.map((item, index) => ({
     ...item,
     color: item.color || fallbackColors[index % fallbackColors.length],
-  }));
-
+  }))
+  .filter(item => item.value > 0);
+  
   const classSize = typeof size === "string" && namedSizeMap[size];
   const customSize = typeof size === "string" && parseCustomSize(size);
-
   return (
     <div className="rounded-2xl p-2 h-full text-white w-full max-w-6xl mx-auto">
       <h2 className="text-xl font-semibold">{circleName}</h2>
@@ -107,7 +108,7 @@ const Circle: React.FC<CircleProps> = ({
               <div className="transition-all duration-200">
                 {hoveredIndex !== null
                   ? processedData[hoveredIndex].value
-                  : datas.reduce((sum, item) => sum + item.value, 0)}
+                  : taskLength}
               </div>
               {hoveredIndex !== null && (
                 <div className="text-xs font-normal text-gray-300 mt-1 transition-all duration-200">

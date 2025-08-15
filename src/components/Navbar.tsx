@@ -1,7 +1,5 @@
 "use client";
 import React, { useRef } from "react";
-import { IoIosNotificationsOutline } from "react-icons/io";
-import { LuClipboardList } from "react-icons/lu";
 import { IoMdSearch } from "react-icons/io";
 import Breadcrumb from "./Breadcrumb";
 import Image from "next/image";
@@ -11,10 +9,10 @@ import { useState } from "react";
 import { User } from "@/interfaces/LoginResponse";
 import { useEffect } from "react";
 import { clxRequest } from "@/shared/lib/api/clxRequest";
-import { destroyCookie, parseCookies } from "nookies";
+import { parseCookies, setCookie } from "nookies";
 import { AddProfilePhotoDialog } from "./addProfilePhoto";
 import { useRouter } from "next/navigation";
-
+import img1 from"@/shared/assets/icons/notification.png"
 
 function Navbar() {
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -35,18 +33,9 @@ function Navbar() {
   });
 
   const handleLogout = async () => {
-    const accessToken = cookies.accessToken;
-    if (!accessToken) return;
-    try {
-      await clxRequest.post("/auth/logout", {}, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-    destroyCookie(null, "accessToken", { path: "/" });
+    setCookie(null, "accessToken", "", {
+      path: "/",
+    });
     setProfile({
       id: 0,
       firstName: "",
@@ -59,6 +48,16 @@ function Navbar() {
       createdAt: "",
       updatedAt: "",
     });
+    const accessToken = cookies.accessToken;
+    if (accessToken) {
+      clxRequest.post("auth/logout", {}, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }).catch((error) => {
+        console.error("Logout error:", error);
+      });
+    }
     router.replace("/");
   };
 
@@ -67,13 +66,15 @@ function Navbar() {
       const accessToken = cookies.accessToken;
       if (!accessToken) return;
       try {
-        const data = await clxRequest.get<User>("/profile/me", {
+        const data = await clxRequest.get<User>("profile/me", {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
         });
         setProfile(data);
       } catch (error) {
+        cookies.accessToken && setCookie(null, "accessToken", "", { path: "/" });
+        router.replace("/login");
         console.error(error);
       }
     };
@@ -95,11 +96,15 @@ function Navbar() {
             className="w-full pl-10 pr-4 py-2 rounded-lg bg-[#ffffff1a] text-white placeholder-gray-300 focus:outline-none"
           />
         </div>
+
         <button className="p-2 cursor-pointer rounded-full hover:bg-[#ffffff22]">
-          <LuClipboardList size={20} className="text-white" />
-        </button>
-        <button className="p-2 cursor-pointer rounded-full hover:bg-[#ffffff22]">
-          <IoIosNotificationsOutline size={20} className="text-white" />
+          <Image
+            src={img1}
+            alt="Notifications"
+            width={20}
+            height={20}
+            style={{ display: "inline-block" }}
+          />
         </button>
 
         <div className="relative">

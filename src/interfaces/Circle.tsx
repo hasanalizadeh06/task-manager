@@ -5,9 +5,9 @@ interface DataItem {
 }
 
 export interface CircleProps {
-  centerText: string;
   circleName: string;
   datas: DataItem[];
+  taskLength?: number; // Optional, default to 0 if not provided
   size?: "sm" | "md" | "lg" | `${number}x${number}`;
 }
 

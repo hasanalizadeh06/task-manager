@@ -1,8 +1,9 @@
 'use client';
 
 import { FileUploadProps } from '@/interfaces/FileUpload';
+import Image from 'next/image';
 import { useState, useRef } from 'react';
-import { RiFolderUploadLine } from "react-icons/ri";
+import img from "@/shared/assets/icons/send-square.png";
 
 export default function FileUpload({ 
   onFilesSelected, 
@@ -91,7 +92,15 @@ export default function FileUpload({
         <div className="flex flex-col items-center space-y-4">
           <div className="flex items-center space-x-2 text-gray-300">
             <h2 className="text-white text-xl font-medium absolute top-2 left-4">Files</h2>
-            <span className='flex items-center justify-center gap-1'><RiFolderUploadLine size={25}/> Drop files to attach or</span>
+            <span className='flex items-center justify-center gap-1'>
+              <Image
+                src={img}
+                alt="File Upload Icon"
+                width={24}
+                height={24}
+                className="text-green-400"
+              />
+              Drop files to attach or</span>
             <button
               onClick={handleBrowseClick}
               className="px-4 py-2 border border-green-500 text-green-400 rounded-4xl hover:bg-green-500/10 transition-colors duration-200"

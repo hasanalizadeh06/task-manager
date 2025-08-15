@@ -59,7 +59,7 @@ export function CreateProjectDialog({
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        const response = await clxRequest.get<CustomerResponse[]>("/customers");
+        const response = await clxRequest.get<CustomerResponse[]>("customers");
         const simplified = response.map((c) => ({
           id: c.id,
           name: c.name,
@@ -73,7 +73,7 @@ export function CreateProjectDialog({
     fetchCustomers();
   }, []);
 
-  const onSubmit = async (data: CreateProjectFormData) => {
+  const onSubmit = async () => {
     try {
       const cookies = parseCookies();
       const accessToken = cookies.accessToken;
@@ -81,23 +81,6 @@ export function CreateProjectDialog({
       if (!accessToken) {
         throw new Error("Access token not found in cookies.");
       }
-
-      const response = await clxRequest.post(
-        "/projects",
-        {
-          title: data.title,
-          description: data.description,
-          dueDate: data.dueDate,
-          customerId: data.customerId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      console.log("Project created:", response);
       onProjectCreated?.();
       setIsOpen(false);
       reset();

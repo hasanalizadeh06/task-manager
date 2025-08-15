@@ -12,7 +12,7 @@ function Page() {
 
   const fetchSprints = async () => {
     try {
-      const res = await clxRequest.get<SprintsResponse>("/sprints?page=1&limit=1000");
+      const res = await clxRequest.get<SprintsResponse>("sprints?page=1&limit=1000");
       setSprints(
         res.items.map((sprint) => ({
           ...sprint,

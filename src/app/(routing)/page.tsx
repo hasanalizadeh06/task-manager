@@ -8,7 +8,7 @@ export default function Page() {
 
     useEffect(() => {
         if (pathname === '/') {
-            router.replace('/dashboard')
+            router.replace('/backlog')
         }
     }, [pathname, router])
 

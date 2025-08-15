@@ -144,7 +144,7 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-@theme {
+:root {
   /* Solid Colors */
   --color-secondary: #d1e3a5;
   --color-tertiary: #cad9c1;
@@ -201,6 +201,23 @@
 
 .scrollbar::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.scrollbar-white::-webkit-scrollbar {
+  border-radius: 4px;
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar-white::-webkit-scrollbar-track {
+  border-radius: 4px;
+  background: #77D638;
+}
+
+.scrollbar-white::-webkit-scrollbar-thumb {
+  background: white;
+  margin: 2px;
   border-radius: 4px;
 }
 

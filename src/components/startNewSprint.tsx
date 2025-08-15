@@ -53,7 +53,7 @@ export default function StartNewSprintDialog({
     try {
       const cookies = parseCookies();
       const accessToken = cookies.accessToken;
-      await clxRequest.post("/sprints", data, {
+      await clxRequest.post("sprints", data, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       onSprintCreated?.();

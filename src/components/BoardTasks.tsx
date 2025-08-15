@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import img from "@/../public/images/avatar.svg";
 import { Project, ProjectsResponse, Task, TasksByStatus } from "@/interfaces/Tasks";
+import { useTaskStore } from "@/features/task/task.store";
 import {
   FiCalendar,
   FiChevronDown,
@@ -13,37 +16,63 @@ import {
 import { clxRequest } from "@/shared/lib/api/clxRequest";
 import { usePathname } from "next/navigation";
 
-const BoardTasks = () => {
-      const pathname = usePathname();
-      const [project, setProject] = useState<Project | null>(null);
-      const [tasks, setTasks] = useState<TasksByStatus | null>(null);  
-      const [allProjects, setAllProjects] = useState<Project[]>([]);
-  
-      useEffect(() => {
-          const fetchProject = async () => {
-              try {
-                  const response = await clxRequest.get<ProjectsResponse>("/projects");
-                  const projectsArray: Project[] = response.items || [];
-                  const foundProject = projectsArray.find((p) => 
-                      pathname.replaceAll("%20"," ").includes(p.title)
-                  );
-                  setAllProjects(projectsArray);
-                  setProject(foundProject || null);
-              } catch (error) {
-                  console.error("Error fetching projects:", error);
-              }
-          };
-          fetchProject();
-      }, [pathname]);  
+type User = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  avatarUrl?: string | null;
+};
 
+const BoardTasks = () => {
+  const pathname = usePathname();
+  const [project, setProject] = useState<Project | null>(null);
+  const [tasks, setTasks] = useState<TasksByStatus | null>(null);  
+  const [allProjects, setAllProjects] = useState<Project[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const { refreshFlag } = useTaskStore();
+  
+    useEffect(() => {
+      async function fetchUsers() {
+        try {
+          const data = await clxRequest.get<{
+            items: {
+              id: number;
+              firstName: string;
+              lastName: string;
+              avatarUrl?: string | null;
+            }[];
+          }>("users?page=1&limit=1000");
+          setUsers(data.items || []);
+        } catch (err) {
+          console.error("Failed to fetch users:", err);
+        }
+      }
+      fetchUsers();
+      const fetchProject = async () => {
+        try {
+          const response = await clxRequest.get<ProjectsResponse>("projects?page=1&limit=1000");
+          const projectsArray: Project[] = response.items || [];
+          const foundProject = projectsArray.find((p) => 
+            pathname.replaceAll("%20"," ").includes(p.title)
+          );
+          setAllProjects(projectsArray);
+          setProject(foundProject || null);
+        } catch (error) {
+          console.error("Error fetching projects:", error);
+        }
+      };
+      fetchProject();
+    }, [pathname, refreshFlag]);  
+
+      const { setTasks: setGlobalTasks } = useTaskStore();
       useEffect(() => {
           clxRequest
               .get<TasksByStatus>(`/tasks/board`)
               .then((data) => {
-                console.log("Fetched tasks:", data);
+                let filteredTasks: TasksByStatus;
                 if (project) {
-                    // @ts-expect-error: TasksByStatus tipinde olmayan property'ler filtreleniyor
-                    const filteredTasks: TasksByStatus = Object.fromEntries(
+                    //@ts-expect-error
+                    filteredTasks = Object.fromEntries(
                       Object.entries(data).map(([status, tasksArr]) => [
                       status,
                       tasksArr.filter(
@@ -51,18 +80,18 @@ const BoardTasks = () => {
                       ),
                       ])
                     );
-                    setTasks(filteredTasks);
-                    console.log("Filtered tasks:", filteredTasks);
                 } else {
-                  const filteredTasks: TasksByStatus = data
-                  setTasks(filteredTasks);
-                  console.log("No project found, displaying all tasks:", filteredTasks);
+                  filteredTasks = data;
                 }
+                setTasks(filteredTasks);
+                // Tüm görevleri tek diziye çevirip store'a kaydet
+                const allTasks = Object.values(filteredTasks).flat();
+                setGlobalTasks(allTasks);
               })
               .catch((error) => {
                   console.error("Error fetching tasks:", error);
               });
-        }, [project]);
+        }, [project, refreshFlag]);
 
   // const [newColumnTitle, setNewColumnTitle] = useState("");
   // const [showNewColumnInput, setShowNewColumnInput] = useState(false);
@@ -102,7 +131,7 @@ const BoardTasks = () => {
           {subtask.title}
         </h4>
         <p className="text-white text-xs opacity-70 mb-2">
-          {subtask.description}
+            <span dangerouslySetInnerHTML={{ __html: subtask.description }} />
         </p>
         <div className="flex items-center justify-between text-xs text-white opacity-80">
           <div className="flex items-center gap-1">
@@ -146,23 +175,39 @@ const BoardTasks = () => {
             {task.name}
             </h3>
             <p className="text-white text-xs opacity-70 leading-snug line-clamp-2 mb-4">
-            {task.description}
+            <span dangerouslySetInnerHTML={{ __html: task.description }} />
             </p>
 
             <div className="flex items-center justify-between mb-4">
             <div className="flex items-center -space-x-2">
-              {task.assignedTo?.slice(0, 3).map((name, index) => (
-              <div
-                key={index}
-                className="w-6 h-6 rounded-full border-2 border-white bg-pink-400 text-[10px] text-white flex items-center justify-center font-semibold"
-              >
-                {name[0]}
-              </div>
-              ))}
-              {task.assignedTo?.length > 3 && (
-              <div className="w-6 h-6 rounded-full border-2 border-white bg-white/20 text-[10px] text-white flex items-center justify-center font-semibold">
-                +{task.assignedTo.length - 3}
-              </div>
+              {task.assignedTo?.slice(0, 4).map((userId) => {
+                const user = users.find((u) => u.id === Number(userId));
+                return (
+                  <div
+                    title={user ? user.firstName + " " + user.lastName : "Unknown User"}
+                    key={userId}
+                    className="w-7 h-7 rounded-full border-2 border-green-400 flex items-center justify-center overflow-hidden"
+                  >
+                    <Image
+                      width={100}
+                      height={100}
+                      src={user?.avatarUrl || img}
+                      alt="User Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                );
+              })}
+              {task.assignedTo?.length > 4 && (
+                <div
+                  title={task.assignedTo.slice(4).map((userId) => {
+                    const user = users.find((u) => u.id === Number(userId));
+                    return user ? `${user.lastName[0]}.${user.firstName}` : "Unknown User";
+                  }).join(", ")}
+                  className="w-7 h-7 rounded-full border-2 border-white bg-gray-400 text-[10px] text-white flex items-center justify-center font-semibold"
+                >
+                  +{task.assignedTo.length - 4}
+                </div>
               )}
             </div>
             <div className="flex items-center gap-3 text-white text-xs opacity-60">
@@ -179,9 +224,34 @@ const BoardTasks = () => {
             <div className="flex items-center gap-1">
               <FiCalendar size={12} /> Due: {formatDate(task.dueDate)}
             </div>
-            <div className="flex items-center gap-1 text-red-400">
+            <div
+              className={`flex items-center gap-1 ${
+              task.priority === "High"
+                ? "text-orange-400"
+                : task.priority === "Low"
+                ? "text-green-400"
+                : task.priority === "Medium"
+                ? "text-yellow-400"
+                : task.priority === "Critical"
+                ? "text-red-400" : "text-blue-400"
+              }`}
+            >
               <FiFlag size={12} /> {task.priority}
             </div>
+            </div>
+
+            {/* tags */}
+
+            <div className="flex items-center text-sm gap-2 mb-3">
+              Tags: 
+              {task.tags?.map((tag, index) => (
+                <span
+                  key={index}
+                  className="text-white bg-amber-400 py-[1px] px-1 rounded-sm"
+                >
+                  #{tag}
+                </span>
+              ))}
             </div>
 
             <div className="flex items-center justify-between text-white text-xs opacity-80">

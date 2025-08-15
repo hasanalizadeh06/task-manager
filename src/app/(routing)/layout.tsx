@@ -26,7 +26,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="h-screen bg-gradient-to-b from-[#101e23] to-[#2c4954] text-white flex flex-col">
-      <div className="dashboard-layout m-10 bg-[#ffffff1a] flex rounded-4xl p-6 gap-6 min-h-[calc(100vh-80px)]">
+      <div className="dashboard-layout m-10 bg-[#ffffff1a] flex rounded-4xl p-6 gap-6 min-h-[calc(100vh-80px)] max-h-[calc(100vh-80px)]">
         <div className="h-full">
           <Sidebar />
         </div>
