@@ -42,6 +42,7 @@ export function AddProfilePhotoDialog({
                     Authorization: `Bearer ${accessToken}`,
                 },
             });
+            
             onPhotoUploaded?.(selectedFile);
             onPhotoChange?.();
             setIsOpen(false);
