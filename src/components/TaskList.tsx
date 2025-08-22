@@ -7,17 +7,23 @@ import { Task } from "@/interfaces/Tasks";
 import { clxRequest } from "@/shared/lib/api/clxRequest";
 import img from "@/../public/images/avatar.svg";
 import Image from "next/image";
+import flag from "@/shared/assets/icons/flag.png";
 
 type TaskListProps = {
   tasks: Task[];
   addable: boolean;
 };
 
-type User = {
+export type User = {
   id: number;
   firstName: string;
   lastName: string;
   avatarUrl?: string | null;
+  position: {
+    id: string;
+    description: string;
+    name: string;
+  };
 };
 
 function TaskList({ tasks, addable }: TaskListProps) {
@@ -31,6 +37,11 @@ function TaskList({ tasks, addable }: TaskListProps) {
             firstName: string;
             lastName: string;
             avatarUrl?: string | null;
+            position: {
+              id: string;
+              description: string;
+              name: string;
+            };
           }[];
         }>("users?page=1&limit=1000");
         setUsers(data.items || []);
@@ -143,7 +154,16 @@ function TaskList({ tasks, addable }: TaskListProps) {
                     day: "numeric",
                   })}
                 </div>
-                <div>{task.priority}</div>
+                <div>
+                  <Image
+                    src={flag}
+                    alt="Priority Flag"
+                    width={16}
+                    height={16}
+                    className="inline-block mr-1"
+                  />
+                  {task.priority}
+                </div>
                 <div>
                   {new Date(task.dueDate).toLocaleString("en-US", {
                     month: "long",

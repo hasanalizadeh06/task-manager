@@ -11,4 +11,6 @@ export interface NavMenuItem {
     href: string;
     active?: boolean;
     subItems?: NavSubItem[];
+    adminOnly?: boolean;
+    subItemsOnlyForUsers?: boolean;
 }

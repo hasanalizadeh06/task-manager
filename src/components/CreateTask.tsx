@@ -8,6 +8,11 @@ interface User {
   firstName: string;
   lastName: string;
   avatarUrl?: string | null;
+  position: {
+    id: string;
+    description: string;
+    name: string;
+  };
 }
 import {
   Dialog,
@@ -29,6 +34,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Sprint, SprintsResponse } from "@/interfaces/Sprints";
+import { Status } from "@/interfaces/Statuses";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
@@ -111,7 +117,12 @@ function CreateTask({
         id: "c8c619a5-45f2-468a-9992-52abd1dde412",
         title: "Claradix",
         description: "Test",
-        customerId: "cea72c15-232f-48a1-ba8b-9d5de5989b8d",
+        ownerUserId: 2,
+        tasks: [],
+        createdAt: "2025-07-14T06:40:17.522Z",
+        projectAvatarUrl: null,
+        assignedTo: [],
+        archived: false,
       },
       sprint: null,
     },
@@ -151,15 +162,21 @@ function CreateTask({
         },
       ],
       project: {
+        createdAt: "2025-07-14T06:40:17.522Z",
+        tasks: [],
         id: "c8c619a5-45f2-468a-9992-52abd1dde412",
         title: "Claradix",
         description: "Test",
-        customerId: "cea72c15-232f-48a1-ba8b-9d5de5989b8d",
+        ownerUserId: 2,
+        projectAvatarUrl: null,
+        assignedTo: [],
+        archived: false,
       },
       sprint: null,
     },
   ];
   const [sprints, setSprints] = useState<Sprint[]>([]);
+  const [statuses, setStatuses] = useState<Status[]>([]);
   useEffect(() => {
     const fetchSprints = async () => {
       try {
@@ -172,6 +189,17 @@ function CreateTask({
       }
     };
     fetchSprints();
+    const fetchStatuses = async () => {
+      try {
+        const response = await clxRequest.get<Status[]>(
+          "tasks/statuses/all"
+        );
+        setStatuses(response || []);
+      } catch (error) {
+        console.error("Error fetching statuses:", error);
+      }
+    };
+    fetchStatuses();
   }, []);
 
   const [isOpen, setIsOpen] = useState(false);
@@ -385,6 +413,15 @@ function CreateTask({
                         <option value="Done" className="text-black">
                           Done
                         </option>
+                        {statuses && statuses.map((status) => (
+                          <option
+                            key={status.id}
+                            value={status.name}
+                            className="text-black"
+                          >
+                            {status.name}
+                          </option>
+                        ))}
                       </select>
                       {errors.status && (
                         <p className="text-red-400 text-sm">

@@ -2,50 +2,84 @@
 import ProgressCircle from "@/components/rechart-uis/ProgressCircile";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CiMenuKebab } from "react-icons/ci";
 import img from "@/../public/images/pexels-sulimansallehi-1704488.jpg";
 import { FaSearch } from "react-icons/fa";
-import { FaBars, FaPlus } from "react-icons/fa6";
+import { FaBars } from "react-icons/fa6";
+import CreateEpicDialog from "@/components/CreateEpic";
+import { clxRequest } from "@/shared/lib/api/clxRequest";
+import { useRoleStore } from "@/features/auth/model/role.store";
+import icon from "@/shared/assets/icons/more.png";
+import icon1 from "@/shared/assets/icons/tick-circle.png";
+import icon2 from "@/shared/assets/icons/status.png";
+import icon3 from "@/shared/assets/icons/flag.png";
+import icon4 from "@/shared/assets/icons/calendar.png";
+import icon5 from "@/shared/assets/icons/cup.png";
+import icon6 from "@/shared/assets/icons/task.png";
+import icon7 from "@/shared/assets/icons/task-square.png";
+import tasks from "@/shared/assets/icons/task.png";
+import edit_2 from "@/shared/assets/icons/edit-2.png";
+import archive from "@/shared/assets/icons/archive.png";
+import trash from "@/shared/assets/icons/trash.png";
+import AddTasksToEpicDialog from "@/components/AddTasksToEpic";
 
 function Page() {
+  const role = useRoleStore((state) => state.role);
+  const [showEpicTools, setShowEpicTools] = useState("");
   const [viewStats, setViewStats] = useState(false);
   const [showEpics, setShowEpics] = useState(false);
-  const mockEpics = [
-    {
-      id: "epic-1",
-      name: "User Authentication Module",
-      goal: "Implement Auth2 login system",
-      dueDate: "March 31",
-      sprints: ["Sprint 1", "Sprint 2"],
-      stories: 13,
-      bugs: 2,
-      priority: "High",
-      progress: 60,
-    },
-    {
-      id: "epic-2",
-      name: "Payment Integration",
-      goal: "Integrate Stripe payments",
-      dueDate: "April 15",
-      sprints: ["Sprint 2", "Sprint 3"],
-      stories: 8,
-      bugs: 1,
-      priority: "High",
-      progress: 40,
-    },
-    {
-      id: "epic-3",
-      name: "Reporting Dashboard",
-      goal: "Build analytics dashboard",
-      dueDate: "May 10",
-      sprints: ["Sprint 3"],
-      stories: 10,
-      bugs: 0,
-      priority: "High",
-      progress: 20,
-    },
-  ];
+  type EpicItem = {
+    id: string;
+    name: string;
+    goal?: string;
+    status?: string;
+    priority?: string;
+    endDate: string;
+    progress?: number;
+    storyPoints?: number;
+    project: { title?: string };
+  };
+  const [epics, setEpics] = useState<EpicItem[]>([]);
+  async function fetchEpics() {
+    try {
+      const data = await clxRequest.get<{ items: EpicItem[] }>("/epic?page=1&limit=1000");
+      setEpics(data.items || []);
+      console.log("Fetched epics:", data.items);
+    } catch (error) {
+      console.error("Error fetching epics:", error);
+    }
+  }
+
+  async function handleRenameEpic(epic: EpicItem) {
+    const newName = prompt("Enter new name for epic:", epic.name);
+    if (newName && newName !== epic.name) {
+      try {
+        await clxRequest.patch(`/epic/${epic.id}`, { name: newName });
+        fetchEpics();
+        setShowEpicTools("");
+      } catch (error) {
+        alert("Rename failed" + error);
+        console.error("Rename failed" + error);
+      }
+    }
+  }
+
+  async function handleDeleteEpic(epic: EpicItem) {
+    if (window.confirm(`Are you sure you want to delete '${epic.name}'?`)) {
+      try {
+        await clxRequest.delete(`/epic/${epic.id}`);
+        setEpics((prev) => prev.filter((e) => e.id !== epic.id));
+        setShowEpicTools("");
+      } catch (error) {
+        alert("Delete failed" + error);
+        console.error("Delete failed" + error);
+      }
+    }
+  }
+  useEffect(() => {
+    fetchEpics();
+  }, []);
   const spritStatus = [
     {
       name: "Claradix",
@@ -240,7 +274,7 @@ function Page() {
                 setShowEpics(!showEpics);
               }}
             >
-              Show Epics
+              {showEpics ? "Hide" : "Show"} Epics
             </button>
           </div>
           <div className="flex gap-4">
@@ -309,82 +343,143 @@ function Page() {
         </div>
       </div>
       {showEpics && (
-        <div className="bg-[#ffffff1a] flex-1 p-5 rounded-2xl flex flex-col gap-5 items-start justify-between text-white font-semibold min-h-fit">
-          <div className="flex flex-row justify-between items-center w-full gap-5">
+        <div className="bg-[#ffffff1a] flex-1 p-5 rounded-2xl flex flex-col gap-5 items-start justify-start text-white font-semibold min-h-fit">
+          <div className="flex flex-row justify-between items-center text-xl w-full gap-5">
             Epics
-            <div className="bg-[#00c951] flex justify-center items-center gap-2 px-3 py-1 rounded-2xl cursor-pointer">
-              <FaPlus />
-              Create new
-            </div>
+            {role == "admin" || role == "super_admin" && <CreateEpicDialog onEpicCreated={fetchEpics}/>}
           </div>
           <div className="flex flex-col gap-5 w-full">
-            {mockEpics.map((epic) => (
+            {epics.map((epic) => (
               <div
                 key={epic.id}
-                className="bg-[#ffffff1a] rounded-2xl p-5 flex flex-col gap-3 w-full"
+                className="bg-[#ffffff1a] p-4 px-5 rounded-2xl w-full flex flex-col gap-2"
               >
-                <div className="flex justify-between items-center w-full">
-                  <span className="font-semibold text-base">{epic.name}</span>
-                  <div className="flex items-center gap-2">
-                    {epic.priority === "High" && (
-                      <span className="text-red-500">
-                        {/* Flag icon */}
-                        <svg
-                          width="18"
-                          height="18"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path d="M4 2v16h2v-6h9l-2-4 2-4H6V2H4z" />
-                        </svg>
-                      </span>
-                    )}
-                    <span className="text-red-400 text-sm">
-                      {epic.priority}
-                    </span>
-                  </div>
+                <div className="flex items-center relative justify-between w-full mb-2">
+                  <div className="text-lg font-semibold">{epic.name}</div>
+                  <Image src={icon} onClick={() => showEpicTools == epic.id ? setShowEpicTools("") : setShowEpicTools(epic.id)} alt="More" width={20} height={20} className="inline-block cursor-pointer" />
+                  {showEpicTools == epic.id && (
+                    <div className="absolute flex p-4 flex-col items-start right-0 top-10 bg-white/10 rounded-2xl gap-3 shadow-lg" style={{boxShadow: "0px 4px 10px 0px #0000001A", backdropFilter: 'blur(20px)'}}>
+                      <button className="flex items-center gap-2 cursor-pointer font-extralight">
+                        <Image
+                          src={tasks}
+                          alt="Add Task"
+                          width={20}
+                          height={20}
+                        />
+                        <AddTasksToEpicDialog epicId={epic.id}/>
+                      </button>
+                      <button className="flex items-center gap-2 cursor-pointer font-extralight" onClick={() => handleRenameEpic(epic)}>
+                        <Image
+                          src={edit_2}
+                          alt="Rename"
+                          width={20}
+                          height={20}
+                        />
+                        Rename
+                      </button>
+                      {role == "admin" || role == "super_admin" && <button className="flex items-center gap-2 cursor-pointer font-extralight">
+                        <Image
+                          src={archive}
+                          alt="Add Task"
+                          width={20}
+                          height={20}
+                        />
+                        Archive
+                      </button>}
+                      <button className="flex items-center gap-2 cursor-pointer font-extralight" onClick={() => handleDeleteEpic(epic)}>
+                        <Image
+                          src={trash}
+                          alt="Delete"
+                          width={20}
+                          height={20}
+                        />
+                        Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div className="text-gray-200 text-sm">
-                  {epic.progress}% complete
-                </div>
-                <div className="w-full h-2 rounded-full bg-gray-500/50 overflow-hidden">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${epic.progress}%`,
-                      background: "#00c951",
-                      transition: "width 0.3s",
-                    }}
+                <div className="flex items-center gap-2">
+                  <Image
+                    src={icon1}
+                    alt="Tick Circle"
+                    width={20}
+                    height={20}
+                    className="inline-block"
                   />
-                </div>
-                <div className="text-gray-200 text-sm mt-2">
-                  <span className="font-semibold">Goal:</span> {epic.goal}
-                </div>
-                <div className="flex items-center gap-2 text-gray-200 text-sm">
-                  {/* Calendar icon */}
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="mr-1"
-                  >
-                    <path d="M6 2v2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H8V2H6zm10 4v10H4V6h12z" />
-                  </svg>
-                  <span className="font-semibold">Due:</span> {epic.dueDate}
-                </div>
-                <div className="flex flex-wrap gap-4 text-gray-200 text-sm mt-2">
+                  <span>Goal:</span>
                   <span>
-                    <span className="font-semibold">Sprints:</span>{" "}
-                    {epic.sprints.join(", ")}
+                    {epic.goal}
                   </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Image
+                    src={icon2}
+                    alt="Status"
+                    width={20}
+                    height={20}
+                    className="inline-block"
+                  />
+                  <span>Status:</span>
+                  <span className="font-medium">
+                    {epic.status}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Image
+                    src={icon3}
+                    alt="Priority"
+                    width={20}
+                    height={20}
+                    className="inline-block"
+                  />
+                  <span>Priority:</span>
                   <span>
-                    <span className="font-semibold">Stories:</span>{" "}
-                    {epic.stories}
+                    {epic.priority}
                   </span>
-                  <span>
-                    <span className="font-semibold">Bugs:</span> {epic.bugs}
-                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Image
+                    src={icon4}
+                    alt="Due Date"
+                    width={20}
+                    height={20}
+                    className="inline-block"
+                  />
+                  <span>Due Date:</span>
+                  <span>{new Date(epic.endDate).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Image
+                    src={icon5}
+                    alt="Progress"
+                    width={20}
+                    height={20}
+                    className="inline-block"
+                  />
+                  <span>Current progress:</span>
+                  <span>{epic.progress ?? 0}%</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Image
+                    src={icon6}
+                    alt="Project"
+                    width={20}
+                    height={20}
+                    className="inline-block"
+                  />
+                  <span>Project:</span>
+                  <span>{epic.project.title || "Not assigned"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Image
+                    src={icon7}
+                    alt="Stories"
+                    width={20}
+                    height={20}
+                    className="inline-block"
+                  />
+                  <span>Stories:</span>
+                  <span>{epic.storyPoints}</span>
                 </div>
               </div>
             ))}

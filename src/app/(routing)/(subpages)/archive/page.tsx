@@ -1,8 +1,9 @@
 import React from 'react'
+import ArchiveTable from '@/components/ArchiveTable'
 
 function page() {
   return (
-    <div className='text-4xl'>Archive</div>
+    <ArchiveTable />
   )
 }
 

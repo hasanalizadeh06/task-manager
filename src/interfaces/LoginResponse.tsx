@@ -9,6 +9,11 @@ export interface User {
     createdAt: string;
     updatedAt: string;
     lastLoginDate: string;
+    position: {
+        id: string;
+        description: string;
+        name: string;
+    };
 }
 
 export interface LoginResponse {

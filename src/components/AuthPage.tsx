@@ -76,11 +76,11 @@ function AuthPage({ type }: AuthPageProps) {
           setCookie(null, "accessToken", response.accessToken);
           router.replace("/");
         } else {
-          setError("Giriş başarısız.");
+          setError("Email or password is incorrect.");
         }
       } catch (err) {
         console.error("Login error:", err);
-        setError("Giriş başarısız.");
+        setError("Email or password is incorrect.");
       }
     }
   };

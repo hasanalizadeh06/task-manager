@@ -4,7 +4,12 @@ export interface Project {
   id: string;
   title: string;
   description: string;
-  customerId: string;
+  tasks: Task[];
+  ownerUserId: number;
+  createdAt: string;
+  projectAvatarUrl: string | null;
+  assignedTo: number[];
+  archived: boolean;
 }
 
 export interface Subtask {
@@ -42,6 +47,11 @@ export interface UserTasksResponse {
             isActive: boolean;
             lastLoginDate: string | null;
             createdAt: string;
+            position: {
+                id: string;
+                description: string;
+                name: string;
+            };
         };
         tasks: Task[];
         statistics: {

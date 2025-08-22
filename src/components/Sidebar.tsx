@@ -17,6 +17,8 @@ import img1 from "@/shared/assets/icons/task.png"
 import img2 from "@/shared/assets/icons/menu-board.png"
 import img3 from "@/shared/assets/icons/archive.png"
 import img4 from "@/shared/assets/icons/element-2.png"
+import img5 from "@/shared/assets/icons/profile-2user.png"
+import { useRoleStore } from "@/features/auth/model/role.store";
 
 // import { MdOutlineSpaceDashboard } from "react-icons/md";
 // import { LuCalendarDays } from "react-icons/lu";
@@ -30,6 +32,7 @@ function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [latestProjects, setLatestProjects] = useState<ProjectItem[]>([]);
+  const role = useRoleStore((state) => state.role);
   const menuItems: NavMenuItem[] = React.useMemo(
     () => [
       // {
@@ -38,6 +41,20 @@ function Sidebar() {
       //   href: "/dashboard",
       //   active: true,
       // },
+      {
+        label: "Users",
+        icon: (
+          <Image
+            src={img5}
+            alt="Users"
+            width={20}
+            height={20}
+            style={{ display: "inline-block" }}
+          />
+        ),
+        adminOnly: true,
+        href: "/users",
+      },
       {
         label: "Projects",
         icon: (
@@ -50,6 +67,7 @@ function Sidebar() {
           />
         ),
         href: "/projects",
+        subItemsOnlyForUsers: true,
         subItems: projects,
       },
       {
@@ -204,7 +222,6 @@ function Sidebar() {
                 key={item.label}
                 item={item}
                 isCollapsed={isCollapsed}
-      
                 pathname={pathname}
               />
               // <li
@@ -329,13 +346,15 @@ function Sidebar() {
                 </Link>
               </li>
             ))}
+            {role === "admin" || role === "super_admin" ? (
             <li className={`flex${isCollapsed ? " justify-center" : ""}`}>
               <CreateProjectDialog
                 triggerStyle={true}
                 onProjectCreated={getNavProjects}
-                isCollapsed={isCollapsed}
-              />
-            </li>
+                  isCollapsed={isCollapsed}
+                />
+              </li>
+            ) : null}
           </ul>
         </div>
       </div>

@@ -10,9 +10,10 @@ import { User } from "@/interfaces/LoginResponse";
 import { useEffect } from "react";
 import { clxRequest } from "@/shared/lib/api/clxRequest";
 import { parseCookies, setCookie } from "nookies";
-import { AddProfilePhotoDialog } from "./addProfilePhoto";
+import { AddProfilePhotoDialog } from "./AddProfilePhoto";
 import { useRouter } from "next/navigation";
 import img1 from"@/shared/assets/icons/notification.png"
+import { useRoleStore } from "@/features/auth/model/role.store";
 
 function Navbar() {
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -30,6 +31,11 @@ function Navbar() {
     lastLoginDate: "",
     createdAt: "",
     updatedAt: "",
+    position: {
+      id: "",
+      description: "",
+      name: "",
+    },
   });
 
   const handleLogout = async () => {
@@ -47,6 +53,11 @@ function Navbar() {
       lastLoginDate: "",
       createdAt: "",
       updatedAt: "",
+      position: {
+        id: "",
+        description: "",
+        name: "",
+      },
     });
     const accessToken = cookies.accessToken;
     if (accessToken) {
@@ -72,6 +83,8 @@ function Navbar() {
           },
         });
         setProfile(data);
+        useRoleStore.getState().setRole(data.role);
+        
       } catch (error) {
         if (cookies.accessToken) {
           setCookie(null, "accessToken", "", { path: "/" });

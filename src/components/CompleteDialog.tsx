@@ -3,8 +3,13 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogOverlay, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { FaChevronDown } from "react-icons/fa";
+import { Sprint } from "@/interfaces/Sprints";
 
-function CompleteDialog() {
+type CompleteDialogProps = {
+  sprint: Sprint;
+};
+
+function CompleteDialog({ sprint }: CompleteDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -19,7 +24,7 @@ function CompleteDialog() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <button className={`bg-[#00C951] hover:bg-[#00c20a] rounded-2xl text-white px-4 py-2 font-semibold text-sm transition`}>
-          Complate Dialog
+          Complate {sprint.name}
         </button>
       </DialogTrigger>
       <DialogOverlay className="bg-black/20" />
