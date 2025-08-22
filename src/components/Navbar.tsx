@@ -10,7 +10,7 @@ import { User } from "@/interfaces/LoginResponse";
 import { useEffect } from "react";
 import { clxRequest } from "@/shared/lib/api/clxRequest";
 import { parseCookies, setCookie } from "nookies";
-import { AddProfilePhotoDialog } from "./AddProfilePhoto";
+import { AddProfilePhotoDialog } from "./AddProfilePhot";
 import { useRouter } from "next/navigation";
 import img1 from"@/shared/assets/icons/notification.png"
 import { useRoleStore } from "@/features/auth/model/role.store";
