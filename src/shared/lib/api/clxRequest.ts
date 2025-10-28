@@ -72,5 +72,17 @@ export const clxRequest = {
     });
   },
 
+  patchForm<T = unknown>(
+    url: string,
+    formData: FormData,
+    options?: Omit<ApiRequestOptions, "method" | "body">,
+  ): Promise<T> {
+    return apiRequest<T>(url, {
+      ...options,
+      method: "PATCH",
+      body: formData,
+    });
+  },
+
   request: apiRequest,
 };

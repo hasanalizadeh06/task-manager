@@ -9,7 +9,7 @@ import { useState } from "react";
 import { User } from "@/interfaces/LoginResponse";
 import { useEffect } from "react";
 import { clxRequest } from "@/shared/lib/api/clxRequest";
-import { parseCookies, setCookie } from "nookies";
+import { destroyCookie, parseCookies } from "nookies";
 import { AddProfilePhotoDialog } from "./AddProfilePhoto";
 import { useRouter } from "next/navigation";
 import img1 from"@/shared/assets/icons/notification.png"
@@ -36,11 +36,12 @@ function Navbar() {
       description: "",
       name: "",
     },
+    assignedProjects: 0,
   });
 
   const handleLogout = async () => {
-    setCookie(null, "accessToken", "", {
-      path: "/",
+    destroyCookie(null, 'accessToken', {
+      path: '/',
     });
     setProfile({
       id: 0,
@@ -58,10 +59,13 @@ function Navbar() {
         description: "",
         name: "",
       },
+      assignedProjects: 0,
     });
+    useRoleStore.getState().setRole("");
+    useRoleStore.getState().setUserId(0);
     const accessToken = cookies.accessToken;
     if (accessToken) {
-      clxRequest.post("auth/logout", {}, {
+      clxRequest.post("/auth/logout", {}, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -69,7 +73,7 @@ function Navbar() {
         console.error("Logout error:", error);
       });
     }
-    router.replace("/");
+    router.replace("/login");
   };
 
     const fetchProfile = useCallback(async () => {
@@ -77,17 +81,19 @@ function Navbar() {
       const accessToken = cookies.accessToken;
       if (!accessToken) return;
       try {
-        const data = await clxRequest.get<User>("profile/me", {
+        const data = await clxRequest.get<User>("/profile/me", {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
         });
-        setProfile(data);
         useRoleStore.getState().setRole(data.role);
-        
+        useRoleStore.getState().setUserId(data.id);
+        setProfile(data);
       } catch (error) {
         if (cookies.accessToken) {
-          setCookie(null, "accessToken", "", { path: "/" });
+          destroyCookie(null, 'accessToken', {
+            path: '/',
+          });
         }
         router.replace("/login");
         console.error(error);
@@ -124,7 +130,7 @@ function Navbar() {
 
         <div className="relative">
           <div
-            className="w-9 h-9 cursor-pointer rounded-full border-2 border-green-400 flex items-center justify-center overflow-hidden"
+            className="w-9 h-9 cursor-pointer rounded-full flex items-center justify-center overflow-hidden"
             onClick={() => setShowProfileMenu((prev) => !prev)}
           >
             <Image
@@ -138,10 +144,10 @@ function Navbar() {
           {showProfileMenu && (
             <div
               ref={profileMenuRef}
-              className="absolute right-0 mt-2 w-80 bg-white/1 backdrop-blur-lg rounded-2xl shadow-lg border border-green-400 p-6 z-50"
+              className="absolute right-0 mt-2 w-80 bg-white/1 backdrop-blur-lg rounded-2xl shadow-lg border p-6 z-50"
             >
               <div className="flex items-center gap-4 mb-4">
-                <div className="group w-14 h-14 rounded-full border-2 border-green-400 overflow-hidden relative cursor-pointer hover:bg-gray-700 transition-colors">
+                <div className="group w-14 h-14 rounded-full overflow-hidden relative cursor-pointer hover:bg-gray-700 transition-colors">
                   <Image
                     width={56}
                     height={56}
@@ -153,9 +159,9 @@ function Navbar() {
                 </div>
                 <div>
                   <div className="text-lg font-semibold text-green-400">
-                    {profile.firstName} {profile.lastName}
+                    {profile ? `${profile.firstName} ${profile.lastName}` : "Deleted user"}
                   </div>
-                  <div className="text-sm text-white">{profile.email}</div>
+                  <div className="text-sm text-white">{profile?.email || "No email"}</div>
                 </div>
               </div>
               <div className="flex flex-col gap-4">

@@ -18,7 +18,7 @@ function Page({ }) {
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        const response = await clxRequest.get<ProjectsResponse>("projects?page=1&limit=1000");
+        const response = await clxRequest.get<ProjectsResponse>("/projects?page=1&limit=1000");
         const projectsArray: Project[] = response.items || [];
           const foundProject = projectsArray.find((p) => 
             pathname.replaceAll("%20"," ").includes(p.title)
@@ -47,10 +47,11 @@ function Page({ }) {
       .get<UserTasksResponse>(`/dashboard/users-tasks?projectId=${project.id}`)
       .then((data) => {
         const chartData = data.items.map(item => ({
-          name: item.user.firstName,
+          name: item.user ? item.user.firstName : "Deleted user",
           value: item.statistics.totalTasks
         }));
         setStats(chartData);
+        console.log({ chartData })
       })
       .catch((error) => {
         console.error("Error fetching user tasks:", error);
@@ -63,6 +64,7 @@ function Page({ }) {
           <FileUpload
             acceptedFileTypes="image/*,.pdf,.doc,.docx"
             maxFiles={5}
+            fieldType="rich"
           />
         </div>
         <div className="flex-1/2 bg-[#ffffff1a] rounded-2xl p-5">

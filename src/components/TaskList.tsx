@@ -43,7 +43,7 @@ function TaskList({ tasks, addable }: TaskListProps) {
               name: string;
             };
           }[];
-        }>("users?page=1&limit=1000");
+        }>("/users?page=1&limit=1000");
         setUsers(data.items || []);
       } catch (err) {
         console.error("Failed to fetch users:", err);
@@ -55,7 +55,7 @@ function TaskList({ tasks, addable }: TaskListProps) {
   const userNameListener = (usersId: string[]) => {
     return usersId.map((userId) => {
       const user = users.find((u) => u.id === Number(userId));
-      return user ? `${user.lastName[0]}.${user.firstName}` : "Unknown User";
+      return user ? `${user.lastName[0]}.${user.firstName}` : "Deleted user";
     });
   };
 
@@ -101,9 +101,9 @@ function TaskList({ tasks, addable }: TaskListProps) {
                           );
                           return (
                             <div
-                              title={user?.firstName + " " + user?.lastName}
+                              title={user ? `${user.firstName} ${user.lastName}` : "Deleted user"}
                               key={index}
-                              className="w-7 h-7 rounded-full border-2 border-green-400 flex items-center justify-center overflow-hidden"
+                                className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden"
                             >
                               <Image
                                 width={100}
@@ -131,9 +131,9 @@ function TaskList({ tasks, addable }: TaskListProps) {
                         );
                         return (
                           <div
-                            title={user?.firstName + " " + user?.lastName}
+                            title={user ? `${user.firstName} ${user.lastName}` : "Deleted user"}
                             key={userId}
-                            className="w-7 h-7 rounded-full border-2 border-green-400 flex items-center justify-center overflow-hidden"
+                              className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden"
                           >
                             <Image
                               width={100}

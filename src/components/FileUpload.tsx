@@ -8,7 +8,8 @@ import img from "@/shared/assets/icons/send-square.png";
 export default function FileUpload({ 
   onFilesSelected, 
   acceptedFileTypes = "*/*", 
-  maxFiles = 10 
+  maxFiles = 10,
+  fieldType
 }: FileUploadProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   // const [files, setFiles] = useState<File[]>([]);
@@ -70,7 +71,7 @@ export default function FileUpload({
     <div className="w-full h-full">      
       <div
         className={`
-          relative bg-[#ffffff1a] h-full flex justify-center items-center rounded-2xl p-16 text-center transition-all duration-200
+          relative bg-[#ffffff1a] h-full flex justify-center items-center rounded-2xl ${fieldType == "poor" ? "p-3" : "p-16"}  text-center transition-all duration-200
           ${isDragOver 
             ? 'bg-green-400/10' 
             : ''
@@ -91,7 +92,9 @@ export default function FileUpload({
         
         <div className="flex flex-col items-center space-y-4">
           <div className="flex items-center space-x-2 text-gray-300">
-            <h2 className="text-white text-xl font-medium absolute top-2 left-4">Files</h2>
+            {fieldType != "poor" && (
+              <h2 className="text-white text-xl font-medium absolute top-2 left-4">Files</h2>
+            )}
             <span className='flex items-center justify-center gap-1'>
               <Image
                 src={img}
@@ -102,6 +105,7 @@ export default function FileUpload({
               />
               Drop files to attach or</span>
             <button
+              type="button"
               onClick={handleBrowseClick}
               className="px-4 py-2 border border-green-500 text-green-400 rounded-4xl hover:bg-green-500/10 transition-colors duration-200"
             >

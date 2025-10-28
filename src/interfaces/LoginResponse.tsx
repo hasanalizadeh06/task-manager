@@ -14,6 +14,7 @@ export interface User {
         description: string;
         name: string;
     };
+    assignedProjects: number;
 }
 
 export interface LoginResponse {

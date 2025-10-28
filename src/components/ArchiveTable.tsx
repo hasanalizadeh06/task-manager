@@ -230,8 +230,8 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
 function Avatar({ user }: { user?: User | null }) {
   return (
     <div
-      title={user ? `${user.firstName} ${user.lastName}` : "Unknown User"}
-      className="w-7 h-7 rounded-full border-2 border-green-400 flex items-center justify-center overflow-hidden"
+      title={user ? `${user.firstName} ${user.lastName}` : "Deleted user"}
+  className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden"
     >
       <Image
         width={100}
@@ -250,39 +250,28 @@ export default function ArchiveTable() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [typeFilter, setTypeFilter] = useState<"all" | "epic" | "task" | "project" | "sprint">("all");
+  const [typeFilter, setTypeFilter] = useState<"all" | "epic" | "task" | "project" | "sprint" | "subtask">("all");
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      clxRequest.get<ArchiveItem[]>("/archive/all").then((res) => {
+        setItems(res);
+        setLoading(false);
+      });
+      clxRequest.get<{items: User[]}>("/users").then((res) => {
+        setUsers(res.items);
+      });
+    } catch (error) {
+      console.error("Failed to fetch archive items or users:", error);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      try {
-        const [archiveResponse, usersResponse] = await Promise.all([
-          clxRequest.get<ArchiveItem[]>("archive/all"),
-          clxRequest.get<{
-            items: {
-              id: number;
-              firstName: string;
-              lastName: string;
-              avatarUrl?: string | null;
-              position: {
-                id: string;
-                description: string;
-                name: string;
-              };
-            }[];
-          }>("users?page=1&limit=1000"),
-        ]);
-
-        setItems(Array.isArray(archiveResponse) ? archiveResponse : []);
-        setUsers(usersResponse.items || []);
-      } catch (error) {
-        console.error("Failed to fetch archive list:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchData();
-  }, []);
+    console.log(items, users)
+  }, [items.length, users.length]);
 
   const filtered = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -447,7 +436,7 @@ export default function ArchiveTable() {
                   {archivedByUser ? (
                     <Avatar user={archivedByUser} />
                   ) : (
-                    <div className="w-7 h-7 rounded-full border-2 border-green-400 flex items-center justify-center overflow-hidden">
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden">
                       <Image width={100} height={100} src={img} alt="User Avatar" className="w-full h-full object-cover" />
                     </div>
                   )}

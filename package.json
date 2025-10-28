@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack --port 3001",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port 3001",
     "lint": "next lint",
     "prepare": "husky"
   },
@@ -26,6 +26,7 @@
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.11.0",
+    "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.509.0",
     "luxon": "^3.6.1",
     "next": "15.3.1",

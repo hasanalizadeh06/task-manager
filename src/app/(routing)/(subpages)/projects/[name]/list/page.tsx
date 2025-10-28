@@ -17,7 +17,7 @@ function Page() {
     useEffect(() => {
         const fetchProject = async () => {
             try {
-                const response = await clxRequest.get<ProjectsResponse>("projects?page=1&limit=1000");
+                const response = await clxRequest.get<ProjectsResponse>("/projects?page=1&limit=1000");
                 const projectsArray: Project[] = response.items || [];
                   const foundProject = projectsArray.find((p) => 
                       pathname.replaceAll("%20"," ").includes(p.title)

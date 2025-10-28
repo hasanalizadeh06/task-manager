@@ -41,14 +41,24 @@ export async function apiRequest<T>(
       signal,
     });
 
-    console.log(response)
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      const error: Error & { status?: number; data?: unknown } = new Error(
+      const error: Error & { 
+        response?: { 
+          status: number; 
+          statusText: string; 
+          data: unknown;
+        } 
+      } = new Error(
         `API request failed: ${response.statusText}`,
       );
-      error.status = response.status;
-      error.data = errorData;
+      
+      // Axios benzeri response yapısı oluştur
+      error.response = {
+        status: response.status,
+        statusText: response.statusText,
+        data: errorData
+      };
 
       console.error(`API Error (${response.status}):`, {
         url,

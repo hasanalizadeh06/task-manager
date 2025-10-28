@@ -37,12 +37,37 @@ export function AddProfilePhotoDialog({
         setIsLoading(true);
         try {
             const formData = new FormData();
-            formData.append("file", selectedFile); 
-            await clxRequest.postForm("profile/photo", formData, {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            });
+            formData.append("file", selectedFile);
+            try {
+                const profileResponse = await clxRequest.get<{ avatarUrl?: string }>("/profile/me", {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                });
+                
+                if (profileResponse.avatarUrl) {
+                    console.log("patching")
+                    await clxRequest.patchForm("/profile/photo", formData, {
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    });
+                } else {
+                    console.log("posting")
+                    await clxRequest.postForm("/profile/photo", formData, {
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+                await clxRequest.postForm("/profile/photo", formData, {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                });
+            }
             
             onPhotoUploaded?.(selectedFile);
             onPhotoChange?.();
@@ -83,6 +108,7 @@ export function AddProfilePhotoDialog({
                             onFilesSelected={handleFilesSelected}
                             acceptedFileTypes="image/*"
                             maxFiles={1}
+                            fieldType="poor"
                         />
                     ) : (
                         <div className="mt-4 flex flex-col items-center">

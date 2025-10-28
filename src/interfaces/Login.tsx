@@ -4,5 +4,6 @@ export interface LoginResponse {
     name?: string;
     email?: string;
     image?: string;
+  assignedProjects?: number;
   };
 }

@@ -1,4 +1,5 @@
 import { StaticImageData } from "next/image";
+import { User } from "./LoginResponse";
 
 export interface Project {
   id: string;
@@ -8,7 +9,7 @@ export interface Project {
   ownerUserId: number;
   createdAt: string;
   projectAvatarUrl: string | null;
-  assignedTo: number[];
+  assignedTo: User[];
   archived: boolean;
 }
 
@@ -52,6 +53,7 @@ export interface UserTasksResponse {
                 description: string;
                 name: string;
             };
+            assignedProjects: number;
         };
         tasks: Task[];
         statistics: {
@@ -96,6 +98,7 @@ export interface Task {
   sprintId: string | null;
   sprint: string | null;
   project: Project;
+  epicId: string | null;
   subtasks: Subtask[];
 }
 

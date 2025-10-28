@@ -15,7 +15,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        const response = await clxRequest.get<ProjectsResponse>("projects?page=1&limit=1000");
+        const response = await clxRequest.get<ProjectsResponse>("/projects?page=1&limit=1000");
         const projectsArray: Project[] = response.items || [];
         const foundProject = projectsArray.find((p) =>
           pathname.replaceAll("%20", " ").includes(p.title)
@@ -54,10 +54,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <LuLayoutDashboard size={16} /> Board
             </Link>
           </div>
-          <CreateTask id={project?.id} name={project?.title} />
+          <CreateTask id={project?.id} projectName={project?.title} dialogTitle={project?.title ? `Add new task to ${project.title}` : undefined} />
         </div>
       </div>
-      <div className="overflow-y-scroll scrollbar pr-2 h-full">{children}</div>
+      <div className="overflow-y-scroll scrollbar h-full pr-2">{children}</div>
     </>
   );
 }

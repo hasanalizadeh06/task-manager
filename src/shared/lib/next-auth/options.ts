@@ -10,7 +10,7 @@ export async function registerUser(
   password: string
 ) {
   const role = "user";
-  return clxRequest.post(`auth/register`, {
+  return clxRequest.post(`/auth/register`, {
     firstName,
     lastName,
     email,
@@ -39,7 +39,7 @@ export const authOptions: AuthOptions = {
       },
       authorize: async (credentials) => {
         try {
-          const response = await clxRequest.post<LoginResponse>(`auth/login`, {
+          const response = await clxRequest.post<LoginResponse>(`/auth/login`, {
             email: credentials?.email,
             password: credentials?.password,
           });

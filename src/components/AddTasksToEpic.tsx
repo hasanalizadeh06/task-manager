@@ -49,7 +49,7 @@ export default function AddTasksToEpicDialog({
     useEffect(() => {
         const fetchTasks = async () => {
             try {
-                const response = await clxRequest.get<{ items: { id: string; name: string }[] }>("tasks?page=1&limit=1000");
+                const response = await clxRequest.get<{ items: { id: string; name: string }[] }>("/tasks?page=1&limit=1000");
                 setTasks(response.items || []);
             } catch (error) {
                 console.error("Error fetching tasks:", error);
@@ -60,7 +60,7 @@ export default function AddTasksToEpicDialog({
 
     const onSubmit = async (data: AddTasksToEpicFormData) => {
         try {
-            await clxRequest.patch(`epic/${epicId}`, {
+            await clxRequest.patch(`/epic/${epicId}`, {
                 taskIds: data.taskIds,
             });
             onAdded?.();

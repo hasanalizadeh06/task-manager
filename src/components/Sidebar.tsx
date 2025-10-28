@@ -12,12 +12,12 @@ import { clxRequest } from "@/shared/lib/api/clxRequest";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import img from "@/shared/assets/icons/briefcase.png"
-import img1 from "@/shared/assets/icons/task.png"
-import img2 from "@/shared/assets/icons/menu-board.png"
-import img3 from "@/shared/assets/icons/archive.png"
-import img4 from "@/shared/assets/icons/element-2.png"
-import img5 from "@/shared/assets/icons/profile-2user.png"
+import img from "@/shared/assets/icons/briefcase.png";
+import img1 from "@/shared/assets/icons/task.png";
+import img2 from "@/shared/assets/icons/menu-board.png";
+import img3 from "@/shared/assets/icons/archive.png";
+import img4 from "@/shared/assets/icons/element-2.png";
+import img5 from "@/shared/assets/icons/profile-2user.png";
 import { useRoleStore } from "@/features/auth/model/role.store";
 
 // import { MdOutlineSpaceDashboard } from "react-icons/md";
@@ -25,6 +25,8 @@ import { useRoleStore } from "@/features/auth/model/role.store";
 import { GoSidebarCollapse } from "react-icons/go";
 import { ProjectItem } from "@/interfaces/Project";
 import SidebarMenuItem from "./SidebarMenuItem";
+import { User } from "@/interfaces/LoginResponse";
+import { parseCookies } from "nookies";
 
 function Sidebar() {
   const router = useRouter();
@@ -33,6 +35,26 @@ function Sidebar() {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [latestProjects, setLatestProjects] = useState<ProjectItem[]>([]);
   const role = useRoleStore((state) => state.role);
+  const [userData, setUserData] = useState<{
+    role: string;
+    userId: number | null;
+  }>({ role: "", userId: null });
+  useEffect(() => {
+    const cookies = parseCookies();
+    const accessToken = cookies.accessToken;
+    clxRequest
+      .get<User>("/profile/me", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+      .then((data) => {
+        setUserData({ role: data.role, userId: data.id });
+      })
+      .catch(() => {
+        setUserData({ role: "", userId: null });
+      });
+  }, []);
   const menuItems: NavMenuItem[] = React.useMemo(
     () => [
       // {
@@ -138,7 +160,25 @@ function Sidebar() {
         const allProjects = data.items.map((project) => ({
           id: project.id,
           label: project.title,
-          icon: (
+          // Ensure assignedTo is always an array of user IDs (string[])
+          assignedTo: Array.isArray(project.assignedTo)
+            ? project.assignedTo.map((u: { id: number | string } | string | number) =>
+                typeof u === "object" && u !== null && "id" in u ? String(u.id) : String(u)
+              )
+            : [],
+          icon: project.projectAvatarUrl ? (
+            <span className="rounded-full flex items-center justify-center w-6 h-6 overflow-hidden" style={{ aspectRatio: "1 / 1" }}>
+              <Image
+              src={project.projectAvatarUrl}
+              alt={project.title}
+              layout="intrinsic"
+              title={project.title}
+              width={24}
+              height={24}
+              className="w-6 h-6 rounded-full object-cover"
+              />
+            </span>
+          ) : (
             <span className="bg-black rounded-full flex items-center justify-center w-6 h-6">
               <Image
                 src={project_logo}
@@ -153,14 +193,20 @@ function Sidebar() {
           ),
           href: "/projects/" + project.title,
         }));
-        setProjects(allProjects.slice(0, 5));
-        setLatestProjects(allProjects.slice(5));
+        let filteredProjects = allProjects;
+        if (userData.role === "user" && userData.userId) {
+          filteredProjects = allProjects.filter((project) =>
+            project.assignedTo.includes(String(userData.userId))
+          );
+        }
+        setProjects(filteredProjects.slice(0, 5));
+        setLatestProjects(filteredProjects.slice(5));
       })
       .catch(() => {});
   };
   useEffect(() => {
     getNavProjects();
-  }, []);
+  }, [userData]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -347,10 +393,10 @@ function Sidebar() {
               </li>
             ))}
             {role === "admin" || role === "super_admin" ? (
-            <li className={`flex${isCollapsed ? " justify-center" : ""}`}>
-              <CreateProjectDialog
-                triggerStyle={true}
-                onProjectCreated={getNavProjects}
+              <li className={`flex${isCollapsed ? " justify-center" : ""}`}>
+                <CreateProjectDialog
+                  triggerStyle={true}
+                  onProjectCreated={getNavProjects}
                   isCollapsed={isCollapsed}
                 />
               </li>

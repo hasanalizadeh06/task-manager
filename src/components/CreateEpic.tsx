@@ -43,7 +43,7 @@ export default function CreateEpicDialog({ onEpicCreated }: { onEpicCreated?: ()
 	useEffect(() => {
 		const fetchProjects = async () => {
 			try {
-				const response = await clxRequest.get<{ items: { id: string; title: string }[] }>("projects?page=1&limit=1000");
+				const response = await clxRequest.get<{ items: { id: string; title: string }[] }>("/projects?page=1&limit=1000");
 				setProjects(response.items || []);
 			} catch (error) {
 				console.error("Error fetching projects:", error);
@@ -65,7 +65,7 @@ export default function CreateEpicDialog({ onEpicCreated }: { onEpicCreated?: ()
 				storyPoints: data.storyPoints,
 				projectId: data.projectId,
 			};
-			await clxRequest.post("epic", payload, {
+			await clxRequest.post("/epic", payload, {
 				headers: { Authorization: `Bearer ${accessToken}` },
 			});
 			onEpicCreated?.();

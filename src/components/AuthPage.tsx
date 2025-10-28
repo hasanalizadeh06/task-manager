@@ -9,13 +9,14 @@ import img from "@/../public/images/login-walpaper.gif";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { clxRequest } from "@/shared/lib/api/clxRequest";
-import { AiOutlineEye } from "react-icons/ai";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { LoginResponse } from "@/interfaces/LoginResponse";
 import { setCookie } from "nookies";
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 function AuthPage({ type }: AuthPageProps) {
+  const [showPassword, setShowPassword] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -68,7 +69,7 @@ function AuthPage({ type }: AuthPageProps) {
         return;
       }
       try {
-        const response = await clxRequest.post<LoginResponse>("auth/login", {
+        const response = await clxRequest.post<LoginResponse>("/auth/login", {
           email: form.email,
           password: form.password,
         });
@@ -147,15 +148,22 @@ function AuthPage({ type }: AuthPageProps) {
               </label>
               <div className="relative">
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   value={form.password}
                   onChange={handleChange}
                   className="w-full px-4 py-2 rounded-lg bg-[#FFFFFF1A] text-white focus:outline-none pr-10"
                   placeholder="********"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer">
-                  <AiOutlineEye size={20} />
+                <span
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+                  onClick={() => setShowPassword((v) => !v)}
+                >
+                  {showPassword ? (
+                    <AiOutlineEyeInvisible size={20} />
+                  ) : (
+                    <AiOutlineEye size={20} />
+                  )}
                 </span>
               </div>
             </div>

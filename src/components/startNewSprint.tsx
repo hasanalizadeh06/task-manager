@@ -32,6 +32,7 @@ export default function StartNewSprintDialog({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const {
     register,
@@ -50,10 +51,11 @@ export default function StartNewSprintDialog({
 
   const onSubmit = async (data: SprintFormData) => {
     setLoading(true);
+    setErrorMessage(""); // Clear any previous error
     try {
       const cookies = parseCookies();
       const accessToken = cookies.accessToken;
-      await clxRequest.post("sprints", data, {
+      await clxRequest.post("/sprints", data, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       onSprintCreated?.();
@@ -61,8 +63,31 @@ export default function StartNewSprintDialog({
       reset();
     } catch (error) {
       console.error("Error creating sprint:", error);
+      const err = error as Error & { 
+        response?: { 
+          data?: { 
+            statusCode?: number; 
+            message?: string; 
+          } 
+        } 
+      };
+      console.log("Full error response:", err.response);
+      
+      if (err.response?.data) {
+        const errorData = err.response.data;
+        console.log("Error data:", errorData);
+        
+        if (errorData.statusCode === 1002) {
+          setErrorMessage(errorData.message || "");
+        } else {
+          setErrorMessage(errorData.message || "An error occurred while creating the sprint");
+        }
+      } else {
+        setErrorMessage("An error occurred while creating the sprint");
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleCancel = () => {
@@ -135,6 +160,11 @@ export default function StartNewSprintDialog({
                 placeholder="Sprint goal"
               />
             </div>
+            {errorMessage && (
+              <div className="mt-2 p-3 bg-red-500/20 border border-red-500 rounded-md">
+                <p className="text-red-400 text-sm">{errorMessage}</p>
+              </div>
+            )}
           </form>
         </div>
         <DialogFooter className="bg-gray-750 px-6 py-4 flex justify-end space-x-3">

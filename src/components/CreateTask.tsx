@@ -26,7 +26,6 @@ import { BsFillSendFill } from "react-icons/bs";
 import "react-quill-new/dist/quill.snow.css";
 
 import dynamic from "next/dynamic";
-import TaskList from "./TaskList";
 import { Task } from "@/interfaces/Tasks";
 import { clxRequest } from "@/shared/lib/api/clxRequest";
 import { parseCookies } from "nookies";
@@ -35,19 +34,23 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Sprint, SprintsResponse } from "@/interfaces/Sprints";
 import { Status } from "@/interfaces/Statuses";
+import info from "@/shared/assets/icons/info-circle.png";
+import SubtasksForm from "./SubtasksForm";
+import type { Subtask } from "./SubtasksForm";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
-// Zod schema for task creation
-const createTaskSchema = z.object({
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const createTaskSchema = () => z.object({
   name: z.string().min(1, "Task name is required"),
   status: z.string().min(1, "Status is required"),
   priority: z.string().min(1, "Priority is required"),
   startDate: z.string().min(1, "Start date is required"),
   dueDate: z.string().min(1, "Due date is required"),
-  sprint: z.string().min(1, "Sprint is required"),
-  assignedTo: z.array(z.string()).min(1, "At least one assignee is required"),
-  timeEstimate: z.preprocess(
+  sprintId: z.string().optional(),
+  assignedTo: z.array(z.number()).min(1, "At least one assignee is required"),
+  estimatedTime: z.preprocess(
     (val) => Number(val),
     z.number().min(1, "Time estimate is required")
   ),
@@ -57,131 +60,55 @@ const createTaskSchema = z.object({
   ),
   tags: z.array(z.string()).optional(),
   description: z.string().optional(),
+  projectId: z.string()
+    .refine(val => !val || uuidRegex.test(val), "Invalid project ID format")
+    .optional(),
+  epicId: z.string()
+    .refine(val => !val || uuidRegex.test(val), "Invalid epic ID format")
+    .optional()
 });
 
+
+type ParentType = "project" | "epic" | "none";
+
 function CreateTask({
-  name,
-  id,
+  projectName,
+  addingSprint,
+  isBoardPage,
+  parentType = "none",
+  parentId,
+  dialogTitle
 }: {
-  name: string | undefined;
+  addingSprint?: Sprint;
+  projectName: string | undefined;
   id: string | undefined;
+  isBoardPage?: boolean;
+  parentType?: ParentType;
+  parentId?: string;
+  dialogTitle?: string;
 }) {
   const [allTags, setAllTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
-  const handleAddTag = (tag: string) => {
-    if (tag && !allTags.includes(tag)) {
-      setAllTags([...allTags, tag]);
-      setTagInput("");
-    }
-  };
-  const handleRemoveTag = (idx: number) => {
-    setAllTags(allTags.filter((_, i) => i !== idx));
-  };
-  const tasks: Task[] = [
-    {
-      id: "f18565fe-f123-4ec8-8024-c09150ddf5a7",
-      name: "Main page",
-      assignedTo: ["Hasan"],
-      startDate: "2025-07-14T06:40:17.522Z",
-      priority: "Medium",
-      dueDate: "2025-07-14T06:40:17.522Z",
-      description: "Claradix main page",
-      status: "To Do",
-      tags: ["string"],
-      images: [],
-      progress: 0,
-      estimatedTime: null,
-      actualTime: 0,
-      createdAt: "2025-07-14T06:41:20.838Z",
-      updatedAt: "2025-07-14T06:41:20.838Z",
-      projectId: "c8c619a5-45f2-468a-9992-52abd1dde412",
-      sprintId: null,
-      subtasks: [
-        {
-          id: "888185f2-f0e9-45ab-a984-665130f7de51",
-          title: "Main logo",
-          description: "string",
-          status: "To Do",
-          priority: "Medium",
-          assignedTo: "string",
-          estimatedTime: 0,
-          actualTime: 0,
-          dueDate: "2025-07-14T06:41:52.113Z",
-          order: 0,
-          createdAt: "2025-07-14T06:42:05.163Z",
-          updatedAt: "2025-07-14T06:42:05.163Z",
-          taskId: "f18565fe-f123-4ec8-8024-c09150ddf5a7",
-        },
-      ],
-      project: {
-        id: "c8c619a5-45f2-468a-9992-52abd1dde412",
-        title: "Claradix",
-        description: "Test",
-        ownerUserId: 2,
-        tasks: [],
-        createdAt: "2025-07-14T06:40:17.522Z",
-        projectAvatarUrl: null,
-        assignedTo: [],
-        archived: false,
-      },
-      sprint: null,
-    },
-    {
-      id: "f18565fe-f123-4ec8-8024-c09150ddfsada5a7",
-      name: "Main page",
-      assignedTo: ["Hasan"],
-      startDate: "2025-07-14T06:40:17.522Z",
-      priority: "Medium",
-      dueDate: "2025-07-14T06:40:17.522Z",
-      description: "Claradix main page",
-      status: "To Do",
-      tags: ["string"],
-      images: [],
-      progress: 0,
-      estimatedTime: null,
-      actualTime: 0,
-      createdAt: "2025-07-14T06:41:20.838Z",
-      updatedAt: "2025-07-14T06:41:20.838Z",
-      projectId: "c8c619a5-45f2-468a-9992-52abd1dde412",
-      sprintId: null,
-      subtasks: [
-        {
-          id: "888185f2-f0e9-45ab-a984-665130f7de51",
-          title: "Main logo",
-          description: "string",
-          status: "To Do",
-          priority: "Medium",
-          assignedTo: "string",
-          estimatedTime: 0,
-          actualTime: 0,
-          dueDate: "2025-07-14T06:41:52.113Z",
-          order: 0,
-          createdAt: "2025-07-14T06:42:05.163Z",
-          updatedAt: "2025-07-14T06:42:05.163Z",
-          taskId: "f18565fe-f123-4ec8-8024-c09150ddf5a7",
-        },
-      ],
-      project: {
-        createdAt: "2025-07-14T06:40:17.522Z",
-        tasks: [],
-        id: "c8c619a5-45f2-468a-9992-52abd1dde412",
-        title: "Claradix",
-        description: "Test",
-        ownerUserId: 2,
-        projectAvatarUrl: null,
-        assignedTo: [],
-        archived: false,
-      },
-      sprint: null,
-    },
-  ];
+  const [projects, setProjects] = useState<{ id: string; title: string }[]>([]);
+  const [epics, setEpics] = useState<{ id: string; name: string }[]>([]);
+  // const [epicId, setEpicId] = useState<string | undefined>(parentType === "epic" ? parentId : undefined);
+  // const [tagInput, setTagInput] = useState("");
+  // const handleAddTag = (tag: string) => {
+  //   if (tag && !allTags.includes(tag)) {
+  //     setAllTags([...allTags, tag]);
+  //     // setTagInput("");
+  //   }
+  // };
+  // const handleRemoveTag = (idx: number) => {
+  //   setAllTags(allTags.filter((_, i) => i !== idx));
+  // };
+
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [statuses, setStatuses] = useState<Status[]>([]);
   useEffect(() => {
     const fetchSprints = async () => {
       try {
         const response = await clxRequest.get<SprintsResponse>(
-          "sprints?page=1&limit=1000"
+          "/sprints?page=1&limit=1000"
         );
         setSprints(response.items || []);
       } catch (error) {
@@ -192,7 +119,7 @@ function CreateTask({
     const fetchStatuses = async () => {
       try {
         const response = await clxRequest.get<Status[]>(
-          "tasks/statuses/all"
+          "/tasks/statuses/all"
         );
         setStatuses(response || []);
       } catch (error) {
@@ -200,7 +127,17 @@ function CreateTask({
       }
     };
     fetchStatuses();
-  }, []);
+    if (isBoardPage || parentType === "project") {
+      clxRequest.get<{ items: { id: string; title: string }[] }>("/projects?page=1&limit=1000")
+        .then(res => setProjects(res.items || []))
+        .catch(() => setProjects([]));
+    }
+    if (parentType === "epic") {
+      clxRequest.get<{ items: { id: string; name: string }[] }>("/epics?page=1&limit=1000")
+        .then(res => setEpics(res.items || []))
+        .catch(() => setEpics([]));
+    }
+  }, [isBoardPage, parentType]);
 
   const [isOpen, setIsOpen] = useState(false);
   const [description, setDescription] = useState("");
@@ -221,12 +158,12 @@ function CreateTask({
     }
     return () => document.removeEventListener("mousedown", handleClick);
   }, [dropdownOpen]);
-  function addUser(userId: string) {
+  function addUser(userId: number) {
     if (!assignedTo.includes(userId)) {
       setValue("assignedTo", [...assignedTo, userId]);
     }
   }
-  function removeUser(userId: string) {
+  function removeUser(userId: number) {
     setValue(
       "assignedTo",
       assignedTo.filter((id) => id !== userId)
@@ -237,7 +174,7 @@ function CreateTask({
     const fetchUsers = async () => {
       try {
         const response = await clxRequest.get<{ items: User[] }>(
-          "users?page=1&limit=1000"
+          "/users?page=1&limit=1000"
         );
         setUsers(response.items || []);
       } catch (error) {
@@ -257,62 +194,80 @@ function CreateTask({
     setValue,
     watch,
   } = useForm({
-    resolver: zodResolver(createTaskSchema),
+    resolver: zodResolver(createTaskSchema()),
     defaultValues: {
-      name: name || "",
+      name: "",
       status: "",
       priority: "",
       startDate: "",
       dueDate: "",
-      sprint: "",
+      sprintId: addingSprint ? addingSprint.id : "",
       assignedTo: [],
-      timeEstimate: "",
+      projectId:"",
+      estimatedTime: "",
       description: "",
       actualTime: "",
       tags: allTags,
     },
   });
 
-  // For multiselect
   const assignedTo = watch("assignedTo");
-
-  // Submit handler
-  // Zustand store
   const { addTask, triggerRefresh } = useTaskStore();
-
-  const onSubmit = async (data: z.infer<typeof createTaskSchema>) => {
+  const onSubmit = async (data: z.infer<ReturnType<typeof createTaskSchema>>) => {
     try {
-      // Map payload keys to backend requirements using destructuring (safer approach)
-      const { timeEstimate, sprint, ...restData } = data;
+      if (subtasks.length > 0) {
+        for (let i = 0; i < subtasks.length; i++) {
+          const s = subtasks[i];
+          if (!s.title || !s.priority || !s.assignees || s.assignees.length === 0 || !s.startDate || !s.dueDate) {
+            setSubtaskError(`Subtask #${i + 1} is missing required fields.`);
+            return;
+          }
+        }
+      }
       
-      const payload = {
-        ...restData,
-        description,
-        projectId: id,
-        estimatedTime: timeEstimate,
-        actualTime: data.actualTime,
-        tags: allTags,
-        sprintId: sprint,
-      };
-      
-      setAllTags([]); // Clear tags after submission
+      setSubtaskError("");
+      setAllTags([]); 
+      console.log(data)
       const { accessToken } = parseCookies();
-      const response: Task = await clxRequest.post("tasks", payload, {
+      const response: Task = await clxRequest.post("/tasks", data, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      if (response && response.id) {
+      if (response && response.id && subtasks.length > 0) {
+        const subtasksWithTaskId = subtasks.map(subtask => ({
+          ...subtask,
+          taskId: response.id,
+        }));
+        clxRequest.post("/subtasks/bulk", {
+          items: subtasksWithTaskId
+        }, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }).catch((error) => {
+          console.error("Error creating subtasks:", error);
+        });
+        if (activityList.length > 0) {
+          const activities = activityList.map(activity => ({ message: activity.message }));
+          try {
+            clxRequest.post(`/activities/${response.id}/bulk`, {
+              items: activities  
+            }, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            })
+            setActivityList([]);
+          } catch (error) {
+            console.error("Error creating activities:", error);
+          }
+        }
         addTask(response);
         triggerRefresh();
       }
       setIsOpen(false);
       reset();
-        } catch (error: unknown) {
+    } catch (error: unknown) {
       const errorResponse = error as { response?: { data?: { errors?: Record<string, unknown> } } };
       if (errorResponse?.response?.data?.errors) {
-        // If backend returns validation errors, set them in form
         Object.entries(errorResponse.response.data.errors).forEach(
           ([field, message]) => {
-            setError(field as keyof z.infer<typeof createTaskSchema>, {
+            setError(field as keyof z.infer<ReturnType<typeof createTaskSchema>>, {
               type: "manual",
               message: String(message),
             });
@@ -323,6 +278,60 @@ function CreateTask({
       }
     }
   };
+
+  // Compute dialog project name
+  let dialogProjectName = projectName;
+  if (parentType === "project") {
+    dialogProjectName = projectName;
+  } else if (isBoardPage) {
+    const watchedProjectId = watch("projectId");
+    const selectedProject = projects.find(p => p.id === watchedProjectId);
+    if (selectedProject) {
+      dialogProjectName = selectedProject.title;
+    } else {
+      dialogProjectName = undefined;
+    }
+  } else {
+    dialogProjectName = undefined;
+  }
+
+  const [subtasks, setSubtasks] = useState<Subtask[]>([]);
+  const [subtaskError, setSubtaskError] = useState<string>("");
+  const [activityInput, setActivityInput] = useState("");
+  const [activityList, setActivityList] = useState<Array<{
+    user: User;
+    message: string;
+    createdAt: Date;
+  }>>([]);
+
+    // Helper to format time ago
+  function formatTimeAgo(date: Date) {
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - date.getTime()) / 60000); // minutes
+    if (diff < 1) return 'just now';
+    if (diff < 60) return `${diff} min ago`;
+    const hours = Math.floor(diff / 60);
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} day${days > 1 ? 's' : ''} ago`;
+  }
+
+  function handleSendActivity() {
+    if (!activityInput.trim()) return;
+    const currentUser = users[0] || { id: 0, firstName: 'You', lastName: '', avatarUrl: img };
+    setActivityList(prev => {
+      const updated = [
+        ...prev,
+        {
+          user: currentUser,
+          message: activityInput,
+          createdAt: new Date(),
+        }
+      ];
+      return updated;
+    });
+    setActivityInput("");
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -338,7 +347,13 @@ function CreateTask({
             {/* Header - Fixed */}
             <DialogHeader className="flex flex-row items-center justify-between space-y-0 p-6 pb-4 border-b border-slate-600">
               <DialogTitle className="text-white text-lg font-medium flex gap-2 items-center justify-center">
-                Add task to {name}
+                {dialogTitle
+                  ? dialogTitle
+                  : parentType === "project" && dialogProjectName
+                  ? `Add new task to ${dialogProjectName}`
+                  : isBoardPage
+                  ? `Add new task${dialogProjectName ? ` to ${dialogProjectName}` : ""}`
+                  : "Add new task"}
               </DialogTitle>
             </DialogHeader>
 
@@ -357,7 +372,6 @@ function CreateTask({
                       className="w-full rounded-lg bg-white/10 border-0 py-2 px-3 text-white focus:ring-2 focus:ring-green-500"
                       placeholder="Task Name"
                       {...register("name")}
-                      defaultValue={name}
                     />
                     {errors.name && (
                       <p className="text-red-400 text-sm">
@@ -366,24 +380,61 @@ function CreateTask({
                     )}
                   </div>
 
-                  {/* Project */}
-                  {/* 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Project
-                    </label>
-                    <select
-                      className="w-full rounded-lg bg-white/10 border-0 py-2 px-3 text-white focus:ring-2 focus:ring-green-500"
-                      {...register("project")}
-                    >
-                      <option value="">Select project</option>
-                      <option value="Claradix">Claradix</option>
-                    </select>
-                    {errors.project && (
-                      <p className="text-red-400 text-sm">{errors.project.message}</p>
-                    )}
-                  </div>
-                  */}
+                  {/* Project selectbox only if isBoardPage, optional */}
+                  {isBoardPage && (
+                    <div>
+                      <label className="text-sm font-medium flex justify-start items-center text-gray-300 mb-2 relative">
+                        <span className="relative group">
+                          <Image
+                            src={info}
+                            alt="Info"
+                            width={16}
+                            height={16}
+                            className="inline-block mr-1 align-middle cursor-pointer"
+                          />
+                          <span className="absolute z-[200] top-full left-0 mt-2 hidden group-hover:block bg-[#6AC42F] rounded-xl text-white px-4 py-2 text-xs w-max min-w-[220px] shadow-lg transition-opacity">
+                            You can assign this task to a project (optional)
+                          </span>
+                        </span>
+                        Project (optional)
+                      </label>
+                      <select
+                        className="w-full rounded-lg bg-white/10 border-0 py-2 px-3 text-white focus:ring-2 focus:ring-green-500"
+                        {...register("projectId")}
+                        value={watch("projectId") || ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setValue("projectId", value || undefined);
+                        }}
+                      >
+                        <option value="" className="text-black">Select project (optional)</option>
+                        {projects.map((project) => (
+                          <option key={project.id} value={project.id} className="text-black">
+                            {project.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Epic selectbox if parentType is epic */}
+                  {parentType === "epic" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Epic</label>
+                      <select
+                        className="w-full rounded-lg bg-white/10 border-0 py-2 px-3 text-white focus:ring-2 focus:ring-green-500"
+                        {...register("epicId")}
+                        defaultValue={parentId || ""}
+                      >
+                        <option value="" className="text-black">Select epic</option>
+                        {epics.map((epic) => (
+                          <option key={epic.id} value={epic.id} className="text-black">
+                            {epic.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
                   {/* Status & Priority */}
                   <div className="grid grid-cols-2 gap-4">
@@ -397,21 +448,6 @@ function CreateTask({
                       >
                         <option value="" className="text-black">
                           Select status
-                        </option>
-                        <option value="To Do" className="text-black">
-                          To Do
-                        </option>
-                        <option value="In Progress" className="text-black">
-                          In Progress
-                        </option>
-                        <option value="Cancelled" className="text-black">
-                          Canceled
-                        </option>
-                        <option value="Testing" className="text-black">
-                          Testing
-                        </option>
-                        <option value="Done" className="text-black">
-                          Done
                         </option>
                         {statuses && statuses.map((status) => (
                           <option
@@ -498,14 +534,14 @@ function CreateTask({
                   {/* Sprint */}
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Sprint
+                      Sprint (optional)
                     </label>
                     <select
                       className="w-full rounded-lg bg-white/10 border-0 py-2 px-3 focus:ring-2 focus:ring-green-500"
-                      {...register("sprint")}
+                      {...register("sprintId")}
                     >
                       <option value="" className="text-black">
-                        Select sprint
+                        Select sprint (optional)
                       </option>
                       {sprints.map((sprint) => (
                         <option
@@ -517,11 +553,6 @@ function CreateTask({
                         </option>
                       ))}
                     </select>
-                    {errors.sprint && (
-                      <p className="text-red-400 text-sm">
-                        {errors.sprint.message}
-                      </p>
-                    )}
                   </div>
 
                   {/* Assignees (Multiselect with profile photos) */}
@@ -543,7 +574,7 @@ function CreateTask({
                           )}
                           {assignedTo.map((selectedId) => {
                             const user = users.find(
-                              (u) => String(u.id) === selectedId
+                              (u) => (u.id) === selectedId
                             );
                             if (!user) return null;
                             return (
@@ -553,20 +584,20 @@ function CreateTask({
                               >
                                 <Image
                                   src={user.avatarUrl ? user.avatarUrl : img}
-                                  alt={user.firstName + " " + user.lastName}
+                                  alt={user ? `${user.firstName} ${user.lastName}` : "Deleted user"}
                                   width={20}
                                   height={20}
                                   style={{ borderRadius: "50%" }}
                                 />
                                 <span className="text-xs text-white">
-                                  {user.firstName} {user.lastName}
+                                  {user ? `${user.firstName} ${user.lastName}` : "Deleted user"}
                                 </span>
                                 <button
                                   type="button"
                                   className="ml-1 text-red-400 hover:text-red-600 text-2xl"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    removeUser(String(user.id));
+                                    removeUser(user.id);
                                   }}
                                 >
                                   &times;
@@ -591,20 +622,20 @@ function CreateTask({
                             {users.map((user) => (
                               <div
                                 key={user.id}
-                                className={`flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-green-100 ${assignedTo.includes(String(user.id)) ? "bg-green-200" : ""}`}
-                                onClick={() => addUser(String(user.id))}
+                                className={`flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-green-100 ${assignedTo.includes(user.id) ? "bg-green-200" : ""}`}
+                                onClick={() => addUser(user.id)}
                               >
                                 <Image
                                   src={user.avatarUrl ? user.avatarUrl : img}
-                                  alt={user.firstName + " " + user.lastName}
+                                  alt={user ? `${user.firstName} ${user.lastName}` : "Deleted user"}
                                   width={24}
                                   height={24}
                                   style={{ borderRadius: "50%" }}
                                 />
                                 <span className="text-sm text-black">
-                                  {user.firstName} {user.lastName}
+                                  {user ? `${user.firstName} ${user.lastName}` : "Deleted user"}
                                 </span>
-                                {assignedTo.includes(String(user.id)) && (
+                                {assignedTo.includes(user.id) && (
                                   <span className="ml-auto text-green-600 text-xs">
                                     Selected
                                   </span>
@@ -622,6 +653,10 @@ function CreateTask({
                     )}
                   </div>
 
+                </div>
+
+                {/* Middle Column - Description & Attachments */}
+                <div className="flex-1 space-y-4">
                   {/* Time estimate */}
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -630,19 +665,32 @@ function CreateTask({
                     <input
                       type="number"
                       className="w-full rounded-lg bg-white/10 border-0 py-2 px-3 text-white focus:ring-2 focus:ring-green-500"
-                      {...register("timeEstimate", { valueAsNumber: true })}
+                      {...register("estimatedTime", { valueAsNumber: true })}
                       min={1}
                     />
-                    {errors.timeEstimate && (
+                    {errors.estimatedTime && (
                       <p className="text-red-400 text-sm">
-                        {errors.timeEstimate.message}
+                        {errors.estimatedTime.message}
                       </p>
                     )}
                   </div>
-                </div>
-
-                {/* Middle Column - Description & Attachments */}
-                <div className="flex-1 space-y-4">
+                  {/* Actual time */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Actual time
+                    </label>
+                    <input
+                      type="number"
+                      className="w-full rounded-lg bg-white/10 border-0 py-2 px-3 text-white focus:ring-2 focus:ring-green-500"
+                      {...register("actualTime", { valueAsNumber: true })}
+                      min={1}
+                    />
+                    {errors.actualTime && (
+                      <p className="text-red-400 text-sm">
+                        {errors.actualTime.message}
+                      </p>
+                    )}
+                  </div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Description
                   </label>
@@ -681,7 +729,7 @@ function CreateTask({
                   </div>
 
                   {/* Task tags input */}
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
                       Tags
                     </label>
@@ -716,46 +764,56 @@ function CreateTask({
                         placeholder="Type and press space..."
                       />
                     </div>
-                  </div>
-
-                  {/* Actual time */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Actual time
-                    </label>
-                    <input
-                      type="number"
-                      className="w-full rounded-lg bg-white/10 border-0 py-2 px-3 text-white focus:ring-2 focus:ring-green-500"
-                      {...register("actualTime", { valueAsNumber: true })}
-                      min={1}
-                    />
-                    {errors.actualTime && (
-                      <p className="text-red-400 text-sm">
-                        {errors.actualTime.message}
-                      </p>
-                    )}
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Right Column - Activity */}
-                <div className="w-80 bg-white/10 flex flex-col rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
+                <div className="w-80 bg-white/10 relative flex flex-col pr-2 rounded-lg">
+                  <div className="flex items-center justify-between m-4">
                     <h3 className="text-lg font-medium text-white">Activity</h3>
                   </div>
-
-                  <div className="space-y-4 overflow-y-auto flex-1">
-                    <div className="text-center py-8">
-                      <p className="text-gray-400 text-sm">No activity yet</p>
-                    </div>
+                  <div className="overflow-y-auto flex-1 max-h-100 scrollbar pr-2">
+                    {activityList.length === 0 && (
+                      <div className="text-center py-8">
+                        <p className="text-gray-400 text-sm">No activity yet</p>
+                      </div>
+                    )}
+                    {activityList.map((item, idx) => (
+                      <div key={idx} className="rounded-xl p-3 flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Image
+                              src={item.user.avatarUrl || img}
+                              alt={item.user.firstName + ' ' + item.user.lastName}
+                              width={32}
+                              height={32}
+                              className="rounded-full object-cover"
+                            />
+                            <span className="font-semibold text-white text-sm">{item.user.firstName} {item.user.lastName}</span>
+                          </div>
+                          <span className="text-xs text-gray-400">{formatTimeAgo(item.createdAt)}</span>
+                        </div>
+                        <div className="text-white text-sm px-2 pt-1 pb-2 break-words">{item.message}</div>
+                      </div>
+                    ))}
                   </div>
-
-                  <div className="mt-6 flex items-center gap-2">
+                  <div className="absolute bottom-0 w-full p-4 flex items-center gap-2">
                     <input
                       type="text"
+                      value={activityInput}
+                      onChange={e => setActivityInput(e.target.value)}
                       placeholder="Type to add your comment"
                       className="flex-1 rounded-lg bg-white/10 border-0 py-2 px-3 text-white text-sm focus:ring-2 focus:ring-green-500"
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleSendActivity();
+                      }}
                     />
-                    <button className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg">
+                    <button
+                      type="button"
+                      className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg"
+                      onClick={handleSendActivity}
+                      disabled={!activityInput.trim()}
+                    >
                       <BsFillSendFill />
                     </button>
                   </div>
@@ -765,8 +823,21 @@ function CreateTask({
               {/* Subtasks Section - Now inside scrollable area */}
               <div className="w-full flex gap-5 flex-col">
                 <h3 className="text-lg font-medium text-white">Subtasks</h3>
+                  {subtaskError && (
+                    <div className="text-red-400 text-sm font-medium">{subtaskError}</div>
+                  )}
                 <div className="flex gap-5 w-full flex-col">
-                  <TaskList addable={true} tasks={tasks} />
+                  <SubtasksForm
+                    addable
+                    task={{
+                      assignedTo: assignedTo.map(String),
+                      startDate: watch("startDate"),
+                      dueDate: watch("dueDate"),
+                      priority: watch("priority"),
+                    }}
+                    users={users}
+                    onChange={setSubtasks}
+                  />
                 </div>
               </div>
             </div>
