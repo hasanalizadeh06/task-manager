@@ -335,7 +335,7 @@ function Page() {
             <ProgressCircle percentage={sprintData?.percent || 0} size={60} />
           </div>
           <div className="flex-1 flex flex-col m-4">
-            <Link href="/dashboard/sprint">
+            <Link href={`/previous-sprints/${sprintData?.sprint?.name || ""}`}>
               <h3 className="text-white text-lg font-semibold mb-1">
                 {sprintData?.sprint?.name || "Current sprint statistics"}
               </h3>
