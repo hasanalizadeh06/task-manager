@@ -369,9 +369,8 @@ const BoardTasks = (
   };
 
   const renderSubtasks = (task: Task) => {
-    if (!task.subtasks || openSubtaskTaskId !== task.id) return null;
 
-    return task.subtasks.map((subtask) => (
+    return task?.subtasks?.map((subtask) => (
       <div
         key={subtask.id}
         className="mt-3 ml-3 bg-white/10 rounded-xl p-4"

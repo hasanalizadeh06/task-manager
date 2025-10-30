@@ -375,7 +375,7 @@ export function CreateTaskForEpicDialog({
                   <option value="" className="text-black">
                     Select status
                   </option>
-                  {statuses.map((status) => (
+                  {statuses?.map((status) => (
                     <option
                       key={status.id}
                       value={status.name}

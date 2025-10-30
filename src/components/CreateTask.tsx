@@ -449,7 +449,7 @@ function CreateTask({
                         <option value="" className="text-black">
                           Select status
                         </option>
-                        {statuses && statuses.map((status) => (
+                        {statuses && statuses?.map((status) => (
                           <option
                             key={status.id}
                             value={status.name}

@@ -263,7 +263,7 @@ function EditTask({ task, onClose, onTaskUpdated,  }: EditTaskProps) {
                         className="w-full rounded-lg bg-white/10 border-0 py-2 px-3 focus:ring-2 focus:ring-green-500"
                         {...register("status")}
                       >
-                        {statuses.map((status) => (
+                        {statuses?.map((status) => (
                           <option
                             key={status.id}
                             value={status.name}

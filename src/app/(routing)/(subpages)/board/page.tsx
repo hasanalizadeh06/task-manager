@@ -251,7 +251,7 @@ function Page() {
                       />
                   <div className="max-h-40 overflow-y-auto scrollbar">
                     {filteredStatuses.length != 0 ?
-                    filteredStatuses.map((statusOption) => (
+                    filteredStatuses?.map((statusOption) => (
                       <button
                         key={statusOption}
                         className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-[#ffffff1a]"
@@ -262,7 +262,7 @@ function Page() {
                         {statusOption}
                       </button>
                     ))
-                    : statuses.map((statusOption) => (
+                    : statuses?.map((statusOption) => (
                       <button
                         key={statusOption}
                         className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-[#ffffff1a]"
