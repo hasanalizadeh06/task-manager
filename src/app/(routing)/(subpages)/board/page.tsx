@@ -39,9 +39,16 @@ function Page() {
 
   function refreshSprints() {
     clxRequest
-    .get<{ items: Sprint[] }>("/sprints?page=1&limit=1000")
-    .then((data) => setSprints(data.items))
-    .catch(() => {});
+      .get<{ items: Sprint[] }>("/sprints?page=1&limit=1000")
+      .then((data) => {
+      setSprints(data.items);
+      if (selectedSprint) {
+        const updatedSelectedSprint = data.items.find(sprint => sprint.id === selectedSprint.id);
+        setSelectedSprint(updatedSelectedSprint);
+      }
+      })
+      .catch(() => {});
+
   }
   function fetchStatuses() {
     clxRequest
@@ -190,7 +197,7 @@ function Page() {
           {selectedSprint && (
             <CompleteDialog
               sprints={sprints}
-              onComplete={refreshSprints}
+              onComplete={() => {refreshSprints(); setRefreshFlag((prev) => !prev);}}
               sprint={selectedSprint}
             />
           )}

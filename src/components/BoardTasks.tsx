@@ -86,27 +86,85 @@ type BoardTasksProps = {
   setProjects?: (projects: Project[]) => void;
 };
 
-const BoardTasks = (
-  { sprint, isBoardPage, selectMode, selectedTasks, setSelectMode, setSelectedTasks, refreshFlagForSelected, setProjects }: BoardTasksProps
-) => {
+const BoardTasks = ({
+  sprint,
+  isBoardPage,
+  selectMode,
+  selectedTasks,
+  setSelectMode,
+  setSelectedTasks,
+  refreshFlagForSelected,
+  setProjects,
+}: BoardTasksProps) => {
   const pathname = usePathname();
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<TasksByStatus | null>(null);
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [showNewColumnInput, setShowNewColumnInput] = useState(false);
-  const [openColumnDropdown, setOpenColumnDropdown] = useState<string | null>(null);
+  const [openColumnDropdown, setOpenColumnDropdown] = useState<string | null>(
+    null
+  );
   const [openTaskDropdown, setOpenTaskDropdown] = useState<string | null>(null);
   const [openSubtask, setOpenSubtask] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const { refreshFlag } = useTaskStore();
   const role = useRoleStore((s) => s.role);
 
+  const [draggedTask, setDraggedTask] = useState<TaskItem | null>(null);
+  const [draggedFrom, setDraggedFrom] = useState<string | null>(null);
+
+  const handleDragStart = (
+    e: React.DragEvent,
+    task: TaskItem,
+    columnId: string
+  ) => {
+    setDraggedTask(task);
+    setDraggedFrom(columnId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetColumnId: string) => {
+    e.preventDefault();
+
+    if (!draggedTask || !draggedFrom || draggedFrom === targetColumnId) {
+      setDraggedTask(null);
+      setDraggedFrom(null);
+      return;
+    }
+
+    try {
+      // Backend'e status güncelleme isteği gönder
+      await clxRequest.patch(`/tasks/${draggedTask.id}`, {
+        status: targetColumnId,
+      });
+
+      // Başarılı olursa görevleri yeniden çek
+      fetchTasks();
+    } catch (error) {
+      console.error("Failed to update task status:", error);
+      alert("Failed to move task");
+    }
+
+    setDraggedTask(null);
+    setDraggedFrom(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTask(null);
+    setDraggedFrom(null);
+  };
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////                                                ////////////////////////////////////
   //////////////////////////////////               fetch & render project           ////////////////////////////////////
   //////////////////////////////////                                                ////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+
   async function fetchUsers() {
     try {
       const data = await clxRequest.get<{
@@ -130,12 +188,14 @@ const BoardTasks = (
   const fetchProject = useCallback(async () => {
     try {
       if (!pathname) return;
-      
-      const response = await clxRequest.get<ProjectsResponse>("/projects?page=1&limit=1000");
+
+      const response = await clxRequest.get<ProjectsResponse>(
+        "/projects?page=1&limit=1000"
+      );
       const projectsArray: Project[] = response.items || [];
       if (setProjects) setProjects(projectsArray);
-      const foundProject = projectsArray.find((p) => 
-        pathname.replaceAll("%20"," ").includes(p.title)
+      const foundProject = projectsArray.find((p) =>
+        pathname.replaceAll("%20", " ").includes(p.title)
       );
       setProject(foundProject || null);
     } catch (error) {
@@ -155,8 +215,11 @@ const BoardTasks = (
 
   const { setTasks: setGlobalTasks } = useTaskStore();
   function fetchTasks() {
+    const { accessToken } = parseCookies();
     clxRequest
-      .get<TasksByStatus>(`/tasks/board`)
+      .get<TasksByStatus>(`/tasks/board`, {
+        authToken: accessToken
+      })
       .then((data: TasksByStatus) => {
         let filteredTasks: TasksByStatus;
         if (project) {
@@ -370,11 +433,8 @@ const BoardTasks = (
 
   const renderSubtasks = (task: Task) => {
 
-    return task?.subtasks?.map((subtask) => (
-      <div
-        key={subtask.id}
-        className="mt-3 ml-3 bg-white/10 rounded-xl p-4"
-      >
+    return task.subtasks.map((subtask) => (
+      <div key={subtask.id} className="mt-3 ml-3 bg-white/10 rounded-xl p-4">
         <div className="flex justify-between items-start">
           <div>
             <h4 className="text-white font-semibold text-sm mb-1">
@@ -404,12 +464,7 @@ const BoardTasks = (
                     handleRenameSubtask(subtask);
                   }}
                 >
-                  <Image
-                    src={edit_2}
-                    alt="Rename"
-                    width={20}
-                    height={20}
-                  />
+                  <Image src={edit_2} alt="Rename" width={20} height={20} />
                   Rename
                 </button>
                 {(role === "admin" || role === "super_admin") && (
@@ -420,12 +475,7 @@ const BoardTasks = (
                       handleArchiveSubtask(subtask);
                     }}
                   >
-                    <Image
-                      src={archive}
-                      alt="Archive"
-                      width={20}
-                      height={20}
-                    />
+                    <Image src={archive} alt="Archive" width={20} height={20} />
                     Archive
                   </button>
                 )}
@@ -436,12 +486,7 @@ const BoardTasks = (
                     handleDeleteSubtask(subtask);
                   }}
                 >
-                  <Image
-                    src={trash}
-                    alt="Delete"
-                    width={20}
-                    height={20}
-                  />
+                  <Image src={trash} alt="Delete" width={20} height={20} />
                   Delete
                 </button>
               </div>
@@ -495,6 +540,8 @@ const BoardTasks = (
         Object.entries(tasks).map(([status, column]) => (
           <div
             key={status}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, status)}
             className="flex-shrink-0 h-min w-80 bg-white/10 rounded-lg"
           >
             <div className="flex items-center p-4">
@@ -573,8 +620,10 @@ const BoardTasks = (
                       className="flex items-center gap-2 cursor-pointer font-extralight"
                       onClick={() => {
                         setSelectMode(true);
-                        const tasksInColumn = column.map(task => task.id);
-                        setSelectedTasks([...new Set([...selectedTasks, ...tasksInColumn])]);
+                        const tasksInColumn = column.map((task) => task.id);
+                        setSelectedTasks([
+                          ...new Set([...selectedTasks, ...tasksInColumn]),
+                        ]);
                         setOpenColumnDropdown(null);
                       }}
                     >
@@ -611,19 +660,26 @@ const BoardTasks = (
               {column.map((task) => (
                 <div
                   key={task.id}
+                  draggable={true}
+                  onDragStart={(e) => handleDragStart(e, task, status)}
+                  onDragEnd={handleDragEnd}
                   onClick={() => {
                     if (selectMode) {
                       if (selectedTasks.includes(task.id)) {
-                        setSelectedTasks(selectedTasks.filter(id => id !== task.id));
+                        setSelectedTasks(
+                          selectedTasks.filter((id) => id !== task.id)
+                        );
                       } else {
                         setSelectedTasks([...selectedTasks, task.id]);
                       }
                     }
                   }}
-                  className={`bg-white/5 shadow-xl rounded-xl p-5 border transition-all duration-200 cursor-pointer
-                    ${selectedTasks.includes(task.id) 
-                      ? 'border-blue-500 bg-blue-500/10' 
-                      : 'border-white/20 hover:bg-opacity-20'}`}
+                  className={`bg-white/5 shadow-xl rounded-xl p-5 border transition-all duration-200 cursor-move
+                    ${
+                      selectedTasks.includes(task.id)
+                        ? "border-blue-500 bg-blue-500/10"
+                        : "border-white/20 hover:bg-opacity-20"
+                    }`}
                 >
                   {isBoardPage && (
                     <div className="flex justify-between">
@@ -640,23 +696,18 @@ const BoardTasks = (
                         <button
                           className="p-1 rounded-4xl hover:bg-white/20 transition"
                           title="More options"
-                          onClick={(e) =>
-                            { 
-                              e.stopPropagation()
-                              setOpenTaskDropdown(
-                                openTaskDropdown === task.id ? null : task.id
-                              )
-                            }
-                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenTaskDropdown(
+                              openTaskDropdown === task.id ? null : task.id
+                            );
+                          }}
                         >
                           <Image src={more} alt="More" width={20} height={20} />
                         </button>
                         {openTaskDropdown === task.id && (
                           <div className="w-60 absolute flex p-4 flex-col items-start right-0 top-10 bg-white/10 rounded-2xl gap-3 z-20 shadow-lg backdrop-blur-sm">
-                            <EditTask 
-                              task={task}
-                              onTaskUpdated={fetchTasks}
-                            />
+                            <EditTask task={task} onTaskUpdated={fetchTasks} />
                             <button
                               className="flex items-center gap-2 cursor-pointer font-extralight"
                               onClick={(e) => {
@@ -711,7 +762,7 @@ const BoardTasks = (
                               className="flex items-center gap-2 cursor-pointer font-extralight"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDeleteTask(task)
+                                handleDeleteTask(task);
                               }}
                             >
                               <Image
@@ -736,14 +787,12 @@ const BoardTasks = (
                         <button
                           className="p-1 rounded-4xl hover:bg-white/20 transition"
                           title="More options"
-                          onClick={(e) =>
-                            {
-                              e.stopPropagation()
-                              setOpenTaskDropdown(
-                                openTaskDropdown === task.id ? null : task.id
-                              )
-                            } 
-                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenTaskDropdown(
+                              openTaskDropdown === task.id ? null : task.id
+                            );
+                          }}
                         >
                           <Image src={more} alt="More" width={20} height={20} />
                         </button>
@@ -817,7 +866,7 @@ const BoardTasks = (
                               className="flex items-center gap-2 cursor-pointer font-extralight"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDeleteTask(task)
+                                handleDeleteTask(task);
                               }}
                             >
                               <Image
@@ -936,14 +985,12 @@ const BoardTasks = (
 
                     <button
                       className="flex items-center gap-1 hover:text-green-400 transition"
-                      onClick={(e) =>
-                        {
-                          e.stopPropagation()
-                          setOpenSubtaskTaskId(
-                            openSubtaskTaskId === task.id ? null : task.id
-                          )
-                        }
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenSubtaskTaskId(
+                          openSubtaskTaskId === task.id ? null : task.id
+                        );
+                      }}
                     >
                       <FiChevronDown size={12} /> {task.subtasks?.length || 0}{" "}
                       subtasks

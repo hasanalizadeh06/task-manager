@@ -40,34 +40,37 @@ import type { Subtask } from "./SubtasksForm";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
-const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const uuidRegex =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const createTaskSchema = () => z.object({
-  name: z.string().min(1, "Task name is required"),
-  status: z.string().min(1, "Status is required"),
-  priority: z.string().min(1, "Priority is required"),
-  startDate: z.string().min(1, "Start date is required"),
-  dueDate: z.string().min(1, "Due date is required"),
-  sprintId: z.string().optional(),
-  assignedTo: z.array(z.number()).min(1, "At least one assignee is required"),
-  estimatedTime: z.preprocess(
-    (val) => Number(val),
-    z.number().min(1, "Time estimate is required")
-  ),
-  actualTime: z.preprocess(
-    (val) => Number(val),
-    z.number().min(1, "Actual time is required")
-  ),
-  tags: z.array(z.string()).optional(),
-  description: z.string().optional(),
-  projectId: z.string()
-    .refine(val => !val || uuidRegex.test(val), "Invalid project ID format")
-    .optional(),
-  epicId: z.string()
-    .refine(val => !val || uuidRegex.test(val), "Invalid epic ID format")
-    .optional()
-});
-
+const createTaskSchema = () =>
+  z.object({
+    name: z.string().min(1, "Task name is required"),
+    status: z.string().min(1, "Status is required"),
+    priority: z.string().min(1, "Priority is required"),
+    startDate: z.string().min(1, "Start date is required"),
+    dueDate: z.string().min(1, "Due date is required"),
+    sprintId: z.string().optional(),
+    assignedTo: z.array(z.number()).min(1, "At least one assignee is required"),
+    estimatedTime: z.preprocess(
+      (val) => Number(val),
+      z.number().min(1, "Time estimate is required")
+    ),
+    actualTime: z.preprocess(
+      (val) => Number(val),
+      z.number().min(1, "Actual time is required")
+    ),
+    tags: z.array(z.string()).optional(),
+    description: z.string().optional(),
+    projectId: z
+      .string()
+      .refine((val) => !val || uuidRegex.test(val), "Invalid project ID format")
+      .optional(),
+    epicId: z
+      .string()
+      .refine((val) => !val || uuidRegex.test(val), "Invalid epic ID format")
+      .optional(),
+  });
 
 type ParentType = "project" | "epic" | "none";
 
@@ -77,7 +80,7 @@ function CreateTask({
   isBoardPage,
   parentType = "none",
   parentId,
-  dialogTitle
+  dialogTitle,
 }: {
   addingSprint?: Sprint;
   projectName: string | undefined;
@@ -90,6 +93,18 @@ function CreateTask({
   const [allTags, setAllTags] = useState<string[]>([]);
   const [projects, setProjects] = useState<{ id: string; title: string }[]>([]);
   const [epics, setEpics] = useState<{ id: string; name: string }[]>([]);
+  const [subtasks, setSubtasks] = useState<Subtask[]>([]);
+  const [subtaskError, setSubtaskError] = useState<string>("");
+  const [activityInput, setActivityInput] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [activityList, setActivityList] = useState<
+    Array<{
+      user: User;
+      message: string;
+      createdAt: Date;
+    }>
+  >([]);
   // const [epicId, setEpicId] = useState<string | undefined>(parentType === "epic" ? parentId : undefined);
   // const [tagInput, setTagInput] = useState("");
   // const handleAddTag = (tag: string) => {
@@ -118,9 +133,7 @@ function CreateTask({
     fetchSprints();
     const fetchStatuses = async () => {
       try {
-        const response = await clxRequest.get<Status[]>(
-          "/tasks/statuses/all"
-        );
+        const response = await clxRequest.get<Status[]>("/tasks/statuses/all");
         setStatuses(response || []);
       } catch (error) {
         console.error("Error fetching statuses:", error);
@@ -128,13 +141,19 @@ function CreateTask({
     };
     fetchStatuses();
     if (isBoardPage || parentType === "project") {
-      clxRequest.get<{ items: { id: string; title: string }[] }>("/projects?page=1&limit=1000")
-        .then(res => setProjects(res.items || []))
+      clxRequest
+        .get<{ items: { id: string; title: string }[] }>(
+          "/projects?page=1&limit=1000"
+        )
+        .then((res) => setProjects(res.items || []))
         .catch(() => setProjects([]));
     }
     if (parentType === "epic") {
-      clxRequest.get<{ items: { id: string; name: string }[] }>("/epics?page=1&limit=1000")
-        .then(res => setEpics(res.items || []))
+      clxRequest
+        .get<{ items: { id: string; name: string }[] }>(
+          "/epics?page=1&limit=1000"
+        )
+        .then((res) => setEpics(res.items || []))
         .catch(() => setEpics([]));
     }
   }, [isBoardPage, parentType]);
@@ -142,6 +161,7 @@ function CreateTask({
   const [isOpen, setIsOpen] = useState(false);
   const [description, setDescription] = useState("");
   const [users, setUsers] = useState<User[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -182,6 +202,23 @@ function CreateTask({
       }
     };
     fetchUsers();
+
+    // Fetch current user profile
+    const fetchCurrentUser = async () => {
+      const { accessToken } = parseCookies();
+      if (!accessToken) return;
+      try {
+        const data = await clxRequest.get<User>("/profile/me", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        setCurrentUser(data);
+      } catch (error) {
+        console.error("Error fetching current user:", error);
+      }
+    };
+    fetchCurrentUser();
   }, []);
 
   // Form setup
@@ -203,7 +240,7 @@ function CreateTask({
       dueDate: "",
       sprintId: addingSprint ? addingSprint.id : "",
       assignedTo: [],
-      projectId:"",
+      projectId: "",
       estimatedTime: "",
       description: "",
       actualTime: "",
@@ -213,45 +250,94 @@ function CreateTask({
 
   const assignedTo = watch("assignedTo");
   const { addTask, triggerRefresh } = useTaskStore();
-  const onSubmit = async (data: z.infer<ReturnType<typeof createTaskSchema>>) => {
+  const onSubmit = async (
+    data: z.infer<ReturnType<typeof createTaskSchema>>
+  ) => {
     try {
       if (subtasks.length > 0) {
         for (let i = 0; i < subtasks.length; i++) {
           const s = subtasks[i];
-          if (!s.title || !s.priority || !s.assignees || s.assignees.length === 0 || !s.startDate || !s.dueDate) {
+          if (
+            !s.title ||
+            !s.priority ||
+            !s.assignees ||
+            s.assignees.length === 0 ||
+            !s.startDate ||
+            !s.dueDate
+          ) {
             setSubtaskError(`Subtask #${i + 1} is missing required fields.`);
             return;
           }
         }
       }
-      
+
       setSubtaskError("");
-      setAllTags([]); 
-      console.log(data)
+      setAllTags([]);
+      console.log(data);
       const { accessToken } = parseCookies();
-      const response: Task = await clxRequest.post("/tasks", data, {
-        headers: { Authorization: `Bearer ${accessToken}` },
+      const formData = new FormData();
+
+      // Add all form fields to FormData
+      Object.entries(data).forEach(([key, value]) => {
+        if (key === 'description') return; // Skip description from form data
+        if (Array.isArray(value)) {
+          // Handle arrays (like assignedTo)
+          value.forEach((item) => formData.append(`${key}[]`, String(item)));
+        } else if (value !== undefined && value !== null) {
+          formData.append(key, String(value));
+        }
       });
+
+      // Add description from ReactQuill
+      if (description) {
+        formData.append("description", description);
+      }
+
+      // Add files to FormData
+      selectedFiles.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      const response: Task = await clxRequest.postForm("/tasks", formData, {
+        headers: { 
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
       if (response && response.id && subtasks.length > 0) {
-        const subtasksWithTaskId = subtasks.map(subtask => ({
-          ...subtask,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const subtasksWithTaskId = subtasks.map(({ id, ...rest }) => ({
+          ...rest,
           taskId: response.id,
         }));
-        clxRequest.post("/subtasks/bulk", {
-          items: subtasksWithTaskId
-        }, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }).catch((error) => {
-          console.error("Error creating subtasks:", error);
-        });
-        if (activityList.length > 0) {
-          const activities = activityList.map(activity => ({ message: activity.message }));
-          try {
-            clxRequest.post(`/activities/${response.id}/bulk`, {
-              items: activities  
-            }, {
+
+        clxRequest
+          .post(
+            "/subtasks/bulk",
+            {
+              items: subtasksWithTaskId,
+            },
+            {
               headers: { Authorization: `Bearer ${accessToken}` },
-            })
+            }
+          )
+          .catch((error) => {
+            console.error("Error creating subtasks:", error);
+          });
+        if (activityList.length > 0) {
+          const activities = activityList.map((activity) => ({
+            message: activity.message,
+          }));
+          try {
+            clxRequest.post(
+              `/activities/${response.id}/bulk`,
+              {
+                items: activities,
+              },
+              {
+                headers: { Authorization: `Bearer ${accessToken}` },
+              }
+            );
             setActivityList([]);
           } catch (error) {
             console.error("Error creating activities:", error);
@@ -262,15 +348,23 @@ function CreateTask({
       }
       setIsOpen(false);
       reset();
+      setSelectedFiles([]); // Reset files
+      setDescription(""); // Reset description
+      setActivityList([]); // Reset activity list for good measure
     } catch (error: unknown) {
-      const errorResponse = error as { response?: { data?: { errors?: Record<string, unknown> } } };
+      const errorResponse = error as {
+        response?: { data?: { errors?: Record<string, unknown> } };
+      };
       if (errorResponse?.response?.data?.errors) {
         Object.entries(errorResponse.response.data.errors).forEach(
           ([field, message]) => {
-            setError(field as keyof z.infer<ReturnType<typeof createTaskSchema>>, {
-              type: "manual",
-              message: String(message),
-            });
+            setError(
+              field as keyof z.infer<ReturnType<typeof createTaskSchema>>,
+              {
+                type: "manual",
+                message: String(message),
+              }
+            );
           }
         );
       } else {
@@ -285,7 +379,7 @@ function CreateTask({
     dialogProjectName = projectName;
   } else if (isBoardPage) {
     const watchedProjectId = watch("projectId");
-    const selectedProject = projects.find(p => p.id === watchedProjectId);
+    const selectedProject = projects.find((p) => p.id === watchedProjectId);
     if (selectedProject) {
       dialogProjectName = selectedProject.title;
     } else {
@@ -295,38 +389,79 @@ function CreateTask({
     dialogProjectName = undefined;
   }
 
-  const [subtasks, setSubtasks] = useState<Subtask[]>([]);
-  const [subtaskError, setSubtaskError] = useState<string>("");
-  const [activityInput, setActivityInput] = useState("");
-  const [activityList, setActivityList] = useState<Array<{
-    user: User;
-    message: string;
-    createdAt: Date;
-  }>>([]);
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      setSelectedFiles(Array.from(files));
+    }
+  };
 
-    // Helper to format time ago
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.currentTarget.classList.add("border-green-500");
+  };
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.currentTarget.classList.remove("border-green-500");
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.currentTarget.classList.remove("border-green-500");
+
+    const files = event.dataTransfer.files;
+    if (files) {
+      setSelectedFiles((prev) => [...prev, ...Array.from(files)]);
+    }
+  };
+
+  // Helper to format time ago
   function formatTimeAgo(date: Date) {
     const now = new Date();
     const diff = Math.floor((now.getTime() - date.getTime()) / 60000); // minutes
-    if (diff < 1) return 'just now';
+    if (diff < 1) return "just now";
     if (diff < 60) return `${diff} min ago`;
     const hours = Math.floor(diff / 60);
-    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
     const days = Math.floor(hours / 24);
-    return `${days} day${days > 1 ? 's' : ''} ago`;
+    return `${days} day${days > 1 ? "s" : ""} ago`;
   }
 
   function handleSendActivity() {
     if (!activityInput.trim()) return;
-    const currentUser = users[0] || { id: 0, firstName: 'You', lastName: '', avatarUrl: img };
-    setActivityList(prev => {
+    
+    const user = currentUser || {
+      id: 0,
+      firstName: "Anonymous",
+      lastName: "",
+      avatarUrl: img,
+      email: "",
+      role: "",
+      isActive: true,
+      lastLoginDate: "",
+      createdAt: "",
+      updatedAt: "",
+      position: {
+        id: "",
+        description: "",
+        name: "",
+      },
+      assignedProjects: 0,
+    };
+
+    setActivityList((prev) => {
       const updated = [
         ...prev,
         {
-          user: currentUser,
+          user,
           message: activityInput,
           createdAt: new Date(),
-        }
+        },
       ];
       return updated;
     });
@@ -350,10 +485,10 @@ function CreateTask({
                 {dialogTitle
                   ? dialogTitle
                   : parentType === "project" && dialogProjectName
-                  ? `Add new task to ${dialogProjectName}`
-                  : isBoardPage
-                  ? `Add new task${dialogProjectName ? ` to ${dialogProjectName}` : ""}`
-                  : "Add new task"}
+                    ? `Add new task to ${dialogProjectName}`
+                    : isBoardPage
+                      ? `Add new task${dialogProjectName ? ` to ${dialogProjectName}` : ""}`
+                      : "Add new task"}
               </DialogTitle>
             </DialogHeader>
 
@@ -407,9 +542,15 @@ function CreateTask({
                           setValue("projectId", value || undefined);
                         }}
                       >
-                        <option value="" className="text-black">Select project (optional)</option>
+                        <option value="" className="text-black">
+                          Select project (optional)
+                        </option>
                         {projects.map((project) => (
-                          <option key={project.id} value={project.id} className="text-black">
+                          <option
+                            key={project.id}
+                            value={project.id}
+                            className="text-black"
+                          >
                             {project.title}
                           </option>
                         ))}
@@ -420,15 +561,23 @@ function CreateTask({
                   {/* Epic selectbox if parentType is epic */}
                   {parentType === "epic" && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Epic</label>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Epic
+                      </label>
                       <select
                         className="w-full rounded-lg bg-white/10 border-0 py-2 px-3 text-white focus:ring-2 focus:ring-green-500"
                         {...register("epicId")}
                         defaultValue={parentId || ""}
                       >
-                        <option value="" className="text-black">Select epic</option>
+                        <option value="" className="text-black">
+                          Select epic
+                        </option>
                         {epics.map((epic) => (
-                          <option key={epic.id} value={epic.id} className="text-black">
+                          <option
+                            key={epic.id}
+                            value={epic.id}
+                            className="text-black"
+                          >
                             {epic.name}
                           </option>
                         ))}
@@ -449,15 +598,16 @@ function CreateTask({
                         <option value="" className="text-black">
                           Select status
                         </option>
-                        {statuses && statuses?.map((status) => (
-                          <option
-                            key={status.id}
-                            value={status.name}
-                            className="text-black"
-                          >
-                            {status.name}
-                          </option>
-                        ))}
+                        {statuses &&
+                          statuses.map((status) => (
+                            <option
+                              key={status.id}
+                              value={status.name}
+                              className="text-black"
+                            >
+                              {status.name}
+                            </option>
+                          ))}
                       </select>
                       {errors.status && (
                         <p className="text-red-400 text-sm">
@@ -573,9 +723,7 @@ function CreateTask({
                             </span>
                           )}
                           {assignedTo.map((selectedId) => {
-                            const user = users.find(
-                              (u) => (u.id) === selectedId
-                            );
+                            const user = users.find((u) => u.id === selectedId);
                             if (!user) return null;
                             return (
                               <div
@@ -584,13 +732,19 @@ function CreateTask({
                               >
                                 <Image
                                   src={user.avatarUrl ? user.avatarUrl : img}
-                                  alt={user ? `${user.firstName} ${user.lastName}` : "Deleted user"}
+                                  alt={
+                                    user
+                                      ? `${user.firstName} ${user.lastName}`
+                                      : "Deleted user"
+                                  }
                                   width={20}
                                   height={20}
                                   style={{ borderRadius: "50%" }}
                                 />
                                 <span className="text-xs text-white">
-                                  {user ? `${user.firstName} ${user.lastName}` : "Deleted user"}
+                                  {user
+                                    ? `${user.firstName} ${user.lastName}`
+                                    : "Deleted user"}
                                 </span>
                                 <button
                                   type="button"
@@ -627,13 +781,19 @@ function CreateTask({
                               >
                                 <Image
                                   src={user.avatarUrl ? user.avatarUrl : img}
-                                  alt={user ? `${user.firstName} ${user.lastName}` : "Deleted user"}
+                                  alt={
+                                    user
+                                      ? `${user.firstName} ${user.lastName}`
+                                      : "Deleted user"
+                                  }
                                   width={24}
                                   height={24}
                                   style={{ borderRadius: "50%" }}
                                 />
                                 <span className="text-sm text-black">
-                                  {user ? `${user.firstName} ${user.lastName}` : "Deleted user"}
+                                  {user
+                                    ? `${user.firstName} ${user.lastName}`
+                                    : "Deleted user"}
                                 </span>
                                 {assignedTo.includes(user.id) && (
                                   <span className="ml-auto text-green-600 text-xs">
@@ -652,7 +812,6 @@ function CreateTask({
                       </p>
                     )}
                   </div>
-
                 </div>
 
                 {/* Middle Column - Description & Attachments */}
@@ -701,11 +860,7 @@ function CreateTask({
                     placeholder="Description"
                     className="custom-quill-container"
                     modules={{
-                      toolbar: [
-                        [{ font: [] }],
-                        ["bold", "italic"],
-                        ["link"],
-                      ],
+                      toolbar: [[{ font: [] }], ["bold", "italic"], ["link"]],
                     }}
                   />
                   {errors.description && (
@@ -716,15 +871,60 @@ function CreateTask({
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Attachment
+                      Attachments
                     </label>
-                    <div className="bg-white/10 rounded-lg p-4 border-2 border-dashed border-slate-600 text-center">
-                      <p className="text-sm text-gray-400">
-                        Drop files to upload or{" "}
-                        <button className="text-blue-400 hover:text-blue-300">
-                          Browse
-                        </button>
-                      </p>
+                    <div
+                      className="bg-white/10 rounded-lg p-4 border-2 border-dashed border-slate-600 transition-colors"
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                    >
+                      <input
+                        type="file"
+                        multiple
+                        className="hidden"
+                        ref={fileInputRef}
+                        onChange={handleFileSelect}
+                      />
+                      <div className="text-center">
+                        <p className="text-sm text-gray-400">
+                          Drop files to upload or{" "}
+                          <button
+                            type="button"
+                            className="text-blue-400 hover:text-blue-300"
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            Browse
+                          </button>
+                        </p>
+                      </div>
+
+                      {selectedFiles.length > 0 && (
+                        <div className="mt-4 space-y-2">
+                          {selectedFiles.map((file, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between bg-white/5 p-2 rounded"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <span className="text-xs text-white truncate max-w-[200px]">
+                                  {file.name}
+                                </span>
+                                <span className="text-xs text-gray-400">
+                                  ({(file.size / 1024).toFixed(1)} KB)
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveFile(index)}
+                                className="text-red-400 hover:text-red-500"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -779,21 +979,32 @@ function CreateTask({
                       </div>
                     )}
                     {activityList.map((item, idx) => (
-                      <div key={idx} className="rounded-xl p-3 flex flex-col gap-2">
+                      <div
+                        key={idx}
+                        className="rounded-xl p-3 flex flex-col gap-2"
+                      >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Image
+                            <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 relative rounded-full overflow-hidden">
+                              <Image
                               src={item.user.avatarUrl || img}
-                              alt={item.user.firstName + ' ' + item.user.lastName}
-                              width={32}
-                              height={32}
-                              className="rounded-full object-cover"
-                            />
-                            <span className="font-semibold text-white text-sm">{item.user.firstName} {item.user.lastName}</span>
-                          </div>
-                          <span className="text-xs text-gray-400">{formatTimeAgo(item.createdAt)}</span>
+                              alt={item.user.firstName + " " + item.user.lastName}
+                              fill
+                              sizes="32px"
+                              style={{ objectFit: "cover" }}
+                              />
+                            </div>
+                            <span className="font-semibold text-white text-sm">
+                              {item.user.firstName} {item.user.lastName}
+                            </span>
+                            </div>
+                          <span className="text-xs text-gray-400">
+                            {formatTimeAgo(item.createdAt)}
+                          </span>
                         </div>
-                        <div className="text-white text-sm px-2 pt-1 pb-2 break-words">{item.message}</div>
+                        <div className="text-white text-sm px-2 pt-1 pb-2 break-words">
+                          {item.message}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -801,11 +1012,11 @@ function CreateTask({
                     <input
                       type="text"
                       value={activityInput}
-                      onChange={e => setActivityInput(e.target.value)}
+                      onChange={(e) => setActivityInput(e.target.value)}
                       placeholder="Type to add your comment"
                       className="flex-1 rounded-lg bg-white/10 border-0 py-2 px-3 text-white text-sm focus:ring-2 focus:ring-green-500"
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') handleSendActivity();
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSendActivity();
                       }}
                     />
                     <button
@@ -823,9 +1034,11 @@ function CreateTask({
               {/* Subtasks Section - Now inside scrollable area */}
               <div className="w-full flex gap-5 flex-col">
                 <h3 className="text-lg font-medium text-white">Subtasks</h3>
-                  {subtaskError && (
-                    <div className="text-red-400 text-sm font-medium">{subtaskError}</div>
-                  )}
+                {subtaskError && (
+                  <div className="text-red-400 text-sm font-medium">
+                    {subtaskError}
+                  </div>
+                )}
                 <div className="flex gap-5 w-full flex-col">
                   <SubtasksForm
                     addable

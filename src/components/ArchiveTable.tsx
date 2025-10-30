@@ -23,7 +23,7 @@ interface Task {
   name: string;
   description: string;
   status: string;
-  priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  priority: "Low" | "Medium" | "High" | "Critical";
   assignedTo: string[];
   startDate: string;
   dueDate: string;
@@ -113,22 +113,34 @@ type ArchiveItem = {
   archivedAt?: string;
 };
 
-// Type guards to identify the item type
 function isTask(item: ArchiveRelatedItem): item is Task {
-  return 'priority' in item && typeof (item as Task).priority === 'string' && 
-         ['Low', 'Medium', 'High', 'Critical'].includes((item as Task).priority);
+  if (!item || typeof item !== "object") return false;
+  return (
+    "priority" in item &&
+    typeof (item as Task)?.priority === "string" &&
+    ["Low", "Medium", "High", "Critical"].includes(
+      (item as Task)?.priority
+    )
+  );
 }
 
 function isSprint(item: ArchiveRelatedItem): item is Sprint {
-  return 'goal' in item && 'endDate' in item && !('title' in item);
+  if (!item || typeof item !== "object") return false;
+  return "goal" in item && "endDate" in item && !("title" in item);
 }
 
 function isProject(item: ArchiveRelatedItem): item is Project {
-  return 'title' in item && 'customerId' in item;
+  if (!item || typeof item !== "object") return false;
+  return "title" in item && "customerId" in item;
 }
 
 function isEpic(item: ArchiveRelatedItem): item is Epic {
-  return 'storyPoints' in item && typeof (item as Epic).storyPoints === 'number' && 'goal' in item;
+  if (!item || typeof item !== "object") return false;
+  return (
+    "storyPoints" in item &&
+    typeof (item as Epic).storyPoints === "number" &&
+    "goal" in item
+  );
 }
 
 // Helper function to get display name
@@ -144,13 +156,13 @@ function getDisplayName(item: ArchiveRelatedItem): string {
 
 // Helper function to get description
 function getDescription(item: ArchiveRelatedItem): string {
-  return item.description || "";
+  return item?.description || "";
 }
 
 // Helper function to get assignees
 function getAssignees(item: ArchiveRelatedItem): string[] {
   if (isTask(item) || isSprint(item)) {
-    return item.assignedTo || [];
+    return item?.assignedTo || [];
   }
   if (isProject(item) || isEpic(item)) {
     return (item as Project | Epic).assignedTo || [];
@@ -164,18 +176,18 @@ function getArchivedDate(item: ArchiveItem): string {
   if (item.archivedAt) {
     return item.archivedAt;
   }
-  
+
   // Then check the related item's updatedAt
   const relatedItem = item.relateditem;
-  if ('updatedAt' in relatedItem && relatedItem.updatedAt) {
+  if ("updatedAt" in relatedItem && relatedItem.updatedAt) {
     return relatedItem.updatedAt;
   }
-  
+
   // Finally check createdAt
-  if ('createdAt' in relatedItem && relatedItem.createdAt) {
+  if ("createdAt" in relatedItem && relatedItem.createdAt) {
     return relatedItem.createdAt;
   }
-  
+
   return "";
 }
 
@@ -210,7 +222,7 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
     const matches = text.match(regex) || [];
     return (
       <>
-        {parts.map((part, index) => (
+        {parts?.map((part, index) => (
           <React.Fragment key={index}>
             {part}
             {index < matches.length && (
@@ -231,7 +243,7 @@ function Avatar({ user }: { user?: User | null }) {
   return (
     <div
       title={user ? `${user.firstName} ${user.lastName}` : "Deleted user"}
-  className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden"
+      className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden"
     >
       <Image
         width={100}
@@ -250,7 +262,9 @@ export default function ArchiveTable() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [typeFilter, setTypeFilter] = useState<"all" | "epic" | "task" | "project" | "sprint" | "subtask">("all");
+  const [typeFilter, setTypeFilter] = useState<
+    "all" | "epic" | "task" | "project" | "sprint" | "subtask"
+  >("all");
 
   const fetchData = async () => {
     setLoading(true);
@@ -259,7 +273,7 @@ export default function ArchiveTable() {
         setItems(res);
         setLoading(false);
       });
-      clxRequest.get<{items: User[]}>("/users").then((res) => {
+      clxRequest.get<{ items: User[] }>("/users").then((res) => {
         setUsers(res.items);
       });
     } catch (error) {
@@ -270,7 +284,7 @@ export default function ArchiveTable() {
 
   useEffect(() => {
     fetchData();
-    console.log(items, users)
+    console.log(items, users);
   }, [items.length, users.length]);
 
   const filtered = useMemo(() => {
@@ -295,8 +309,8 @@ export default function ArchiveTable() {
       const archivedByUser = findUser(item.archivedBy ?? null);
       const archivedByName = getUserFullName(archivedByUser).toLowerCase();
 
-      const assigneeNames = getAssignees(item.relateditem)
-        .map((uid) => getUserFullName(findUser(uid)))
+      const assigneeNames = getAssignees(item?.relateditem)
+        ?.map((uid) => getUserFullName(findUser(uid)))
         .join(" ")
         .toLowerCase();
 
@@ -310,7 +324,7 @@ export default function ArchiveTable() {
         archivedByName,
         archivedAtRaw,
         archivedAtFmt,
-      ].some((field) => field.includes(normalizedQuery));
+      ].some((field) => field?.includes(normalizedQuery));
     });
   }, [items, query, typeFilter]);
 
@@ -342,14 +356,20 @@ export default function ArchiveTable() {
             {typeFilter === "all" ? "Filter" : `Filter: ${typeFilter}`}
           </button>
           {isFilterOpen && (
-            <div className="absolute right-0 mt-2 w-44 bg-[#ffffff1a] text-gray-200 rounded-xl shadow-lg overflow-hidden z-10" style={{boxShadow: "0px 4px 10px 0px #0000001A", backdropFilter: 'blur(20px)'}}>
+            <div
+              className="absolute right-0 mt-2 w-44 bg-[#ffffff1a] text-gray-200 rounded-xl shadow-lg overflow-hidden z-10"
+              style={{
+                boxShadow: "0px 4px 10px 0px #0000001A",
+                backdropFilter: "blur(20px)",
+              }}
+            >
               {[
                 { key: "all", label: "All" },
                 { key: "task", label: "Task" },
                 { key: "epic", label: "Epic" },
                 { key: "project", label: "Project" },
                 { key: "sprint", label: "Sprint" },
-              ].map((opt) => (
+              ]?.map((opt) => (
                 <button
                   key={opt.key}
                   onClick={() => {
@@ -382,18 +402,22 @@ export default function ArchiveTable() {
       {/* Rows */}
       <div className="flex flex-col gap-2.5">
         {loading ? (
-          <div className="w-full h-[80px] bg-[#ffffff1a] rounded-2xl flex items-center justify-center text-gray-300">Loading…</div>
+          <div className="w-full h-[80px] bg-[#ffffff1a] rounded-2xl flex items-center justify-center text-gray-300">
+            Loading…
+          </div>
         ) : filtered.length === 0 ? (
-          <div className="w-full h-[80px] bg-[#ffffff1a] rounded-2xl flex items-center justify-center text-gray-300">No archived items</div>
+          <div className="w-full h-[80px] bg-[#ffffff1a] rounded-2xl flex items-center justify-center text-gray-300">
+            No archived items
+          </div>
         ) : (
-          filtered.map((item) => {
+          filtered?.map((item) => {
             const assignees = getAssignees(item.relateditem);
             const archivedDate = getArchivedDate(item);
             const archivedByUser = findUser(item.archivedBy ?? null);
             const displayName = getDisplayName(item.relateditem);
             const description = getDescription(item.relateditem);
             const summaryText = displayName || description || "-";
-            
+
             return (
               <div
                 key={item.id}
@@ -409,15 +433,23 @@ export default function ArchiveTable() {
                   <div className="flex -space-x-2">
                     {assignees.length > 2 ? (
                       <>
-                        {assignees.slice(0, 2).map((uid, idx) => (
-                          <Avatar key={`${uid}-${idx}`} user={findUser(uid)} />
-                        ))}
+                        {assignees
+                          .slice(0, 2)
+                          ?.map((uid, idx) => (
+                            <Avatar
+                              key={`${uid}-${idx}`}
+                              user={findUser(uid)}
+                            />
+                          ))}
                         <div
                           className="w-7 h-7 rounded-full border-2 border-white bg-gray-400 text-[10px] text-white flex items-center justify-center font-semibold"
                           title={assignees
-                            .map((uid) => findUser(uid))
+                            ?.map((uid) => findUser(uid))
                             .filter(Boolean)
-                            .map((u) => `${(u as User).firstName} ${(u as User).lastName}`)
+                            ?.map(
+                              (u) =>
+                                `${(u as User).firstName} ${(u as User).lastName}`
+                            )
                             .slice(2)
                             .join(", ")}
                         >
@@ -425,19 +457,30 @@ export default function ArchiveTable() {
                         </div>
                       </>
                     ) : (
-                      assignees.map((uid, idx) => <Avatar key={`${uid}-${idx}`} user={findUser(uid)} />)
+                      assignees?.map((uid, idx) => (
+                        <Avatar key={`${uid}-${idx}`} user={findUser(uid)} />
+                      ))
                     )}
                   </div>
                 </div>
                 <div className="text-gray-200">
-                  <HighlightedText text={formatDate(archivedDate)} query={query} />
+                  <HighlightedText
+                    text={formatDate(archivedDate)}
+                    query={query}
+                  />
                 </div>
                 <div>
                   {archivedByUser ? (
                     <Avatar user={archivedByUser} />
                   ) : (
                     <div className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden">
-                      <Image width={100} height={100} src={img} alt="User Avatar" className="w-full h-full object-cover" />
+                      <Image
+                        width={100}
+                        height={100}
+                        src={img}
+                        alt="User Avatar"
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   )}
                 </div>

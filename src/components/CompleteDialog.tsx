@@ -30,8 +30,8 @@ function CompleteDialog({ sprint, sprints, onComplete }: CompleteDialogProps) {
           },
         }
       );
-      setIsOpen(false);
       onComplete?.();
+      setIsOpen(false);
     } catch (err) {
       console.error(err);
       alert("Failed to complete sprint");
@@ -53,7 +53,7 @@ function CompleteDialog({ sprint, sprints, onComplete }: CompleteDialogProps) {
       <DialogTrigger asChild>
         <button
           className={`bg-[#00C951] hover:bg-[#00c20a] rounded-2xl text-white px-4 py-2 font-semibold text-sm transition ${sprint.status === "Done" ? "opacity-60 cursor-not-allowed" : ""}`}
-          // disabled={sprint.status === "Done"}
+          disabled={sprint.status === "Done"}
         >
           {sprint.status === "Done" ? "Sprint Completed" : `Complate ${sprint.name}`}
         </button>
