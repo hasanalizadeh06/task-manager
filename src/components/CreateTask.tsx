@@ -305,10 +305,12 @@ function CreateTask({
       });
 
       if (response && response.id && subtasks.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const subtasksWithTaskId = subtasks.map(({ id, ...rest }) => ({
           ...rest,
           taskId: response.id,
         }));
+
         clxRequest
           .post(
             "/subtasks/bulk",

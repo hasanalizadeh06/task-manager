@@ -3,12 +3,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Image, { StaticImageData } from "next/image";
 import img from "@/../public/images/avatar.svg";
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  DropResult,
-} from "react-beautiful-dnd";
 import more from "@/shared/assets/icons/more.png";
 import {
   Project,
