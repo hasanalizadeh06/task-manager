@@ -428,7 +428,7 @@ function Page() {
           <div className="flex justify-between w-full items-center">
             <span className="font-semibold">Backlog</span>
             <button
-              className="text-[#00c951] font-semibold"
+              className="text-[#00c951] font-semibold cursor-pointer"
               onClick={() => {
                 setShowEpics(!showEpics);
               }}
@@ -438,7 +438,7 @@ function Page() {
           </div>
           <div className="flex gap-4 relative">
             <button
-              className="flex items-center gap-2 text-white bg-white/10 px-4 py-2 rounded-full shadow"
+              className="flex items-center gap-2 text-white bg-white/10 cursor-pointer px-4 py-2 rounded-full shadow"
               onClick={() => setFilterDropdownOpen((open) => !open)}
             >
               <FaBars />
@@ -447,7 +447,7 @@ function Page() {
             {filterDropdownOpen && (
               <div className="absolute left-0 top-12 z-20 bg-white/10 rounded-xl shadow-lg p-2 min-w-[150px] flex flex-col gap-2 backdrop-blur">
                 <button
-                  className={`w-full flex items-center text-left px-3 py-2 rounded hover:bg-white/20 text-white`}
+                  className={`w-full flex cursor-pointer items-center text-left px-3 py-2 rounded hover:bg-white/20 text-white`}
                   onClick={() => {
                     if (filterType === 'project') {
                       setFilterType(null);
@@ -467,7 +467,7 @@ function Page() {
                   <span style={filterType === 'project' ? { color: '#7CFC00', fontWeight: 600 } : {}}>By Project</span>
                 </button>
                 <button
-                  className={`w-full flex items-center text-left px-3 py-2 rounded hover:bg-white/20 text-white`}
+                  className={`w-full flex cursor-pointer items-center text-left px-3 py-2 rounded hover:bg-white/20 text-white`}
                   onClick={() => {
                     if (filterType === 'latest') {
                       setFilterType(null);
@@ -487,7 +487,7 @@ function Page() {
                   <span style={filterType === 'latest' ? { color: '#7CFC00', fontWeight: 600 } : {}}>Latest</span>
                 </button>
                 <button
-                  className={`w-full flex items-center text-left px-3 py-2 rounded hover:bg-white/20 text-white`}
+                  className={`w-full flex items-center cursor-pointer text-left px-3 py-2 rounded hover:bg-white/20 text-white`}
                   onClick={() => {
                     if (filterType === 'earliest') {
                       setFilterType(null);

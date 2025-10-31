@@ -214,11 +214,11 @@ export default function UsersTable() {
                 {u.isActive ? "Active" : "Inactive"}
               </div>
               <div className="text-gray-300">
-                <button className="p-2 hover:bg-[#ffffff33] rounded-full" title="Edit user" onClick={() => openEdit(u)}>
+                <button className="p-2 hover:bg-[#ffffff33] rounded-full cursor-pointer" title="Edit user" onClick={() => openEdit(u)}>
                   <Image src={edit} alt="Edit" className="w-4 h-4" />
                 </button>
                 <button 
-                  className="p-2 hover:bg-[#ff000033] rounded-full" 
+                  className="p-2 hover:bg-[#ff000033] rounded-full cursor-pointer" 
                   title="Delete user"
                   onClick={() => handleDeleteUser(u.id, `${u.firstName} ${u.lastName}`)}
                   disabled={deleteLoading === u.id}

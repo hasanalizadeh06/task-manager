@@ -190,7 +190,7 @@ function AuthPage({ type }: AuthPageProps) {
             {error && <div className="text-red-400 text-xs mb-2">{error}</div>}
             <button
               type="submit"
-              className="w-full bg-[#50AF11] hover:bg-lime-600 text-white font-semibold py-3 rounded-lg mt-2 mb-3"
+              className="w-full cursor-pointer bg-[#50AF11] hover:bg-lime-600 text-white font-semibold py-3 rounded-lg mt-2 mb-3"
             >
               {type === "register" ? "SIGN UP" : "LOG IN"}
             </button>

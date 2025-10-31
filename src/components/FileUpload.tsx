@@ -107,7 +107,7 @@ export default function FileUpload({
             <button
               type="button"
               onClick={handleBrowseClick}
-              className="px-4 py-2 border border-green-500 text-green-400 rounded-4xl hover:bg-green-500/10 transition-colors duration-200"
+              className="px-4 py-2 border cursor-pointer border-green-500 text-green-400 rounded-4xl hover:bg-green-500/10 transition-colors duration-200"
             >
               Browse
             </button>

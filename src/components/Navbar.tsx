@@ -165,12 +165,12 @@ function Navbar() {
                 </div>
               </div>
               <div className="flex flex-col gap-4">
-                <button className="flex items-center gap-3 text-white hover:text-green-400">
+                <button className="flex cursor-pointer items-center gap-3 text-white hover:text-green-400">
                   <FaUser />
                   Profile
                 </button>
-                <div className="flex items-center justify-between">
-                  <button className="flex items-center gap-3 text-white hover:text-green-400">
+                <div className="flex items-center justify-between ">
+                  <button className="flex items-center gap-3 cursor-pointer text-white hover:text-green-400">
                     <FaMoon />
                     Dark mode
                   </button>
@@ -181,18 +181,18 @@ function Navbar() {
                   </label>
                 </div>
                 <button
-                  className="flex items-center gap-3 text-white hover:text-green-400"
+                  className="flex items-center gap-3 cursor-pointer text-white hover:text-green-400"
                   onClick={handleLogout}
                 >
                   <FaUsers />
                   Switch account
                 </button>
-                <button className="flex items-center gap-3 text-white hover:text-green-400">
+                <button className="flex items-center cursor-pointer gap-3 text-white hover:text-green-400">
                   <FaCog />
                   Settings
                 </button>
                 <button
-                  className="flex items-center gap-3 text-white hover:text-green-400"
+                  className="flex items-center cursor-pointer gap-3 text-white hover:text-green-400"
                   onClick={handleLogout}
                 >
                   <FaSignOutAlt />

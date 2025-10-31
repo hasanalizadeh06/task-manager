@@ -140,7 +140,7 @@ function Page() {
             <div className="relative" key={project.id}>
               <div className="absolute top-4 right-4 flex flex-col items-end" ref={dropdownRef}>
                 <button
-                  className="text-white/70 hover:bg-white/10 rounded-full p-1 transition z-40"
+                  className="text-white/70 cursor-pointer hover:bg-white/10 rounded-full p-1 transition z-40"
                   style={{ position: "relative" }}
                   onClick={(e) => {
                     e.preventDefault();
@@ -158,21 +158,21 @@ function Page() {
                     className="z-30 bg-[#ffffff1a] rounded-2xl shadow-lg flex flex-col p-2 gap-2 min-w-[140px] backdrop-blur-md mt-2"
                     style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.18)", position: "absolute", top: "100%", right: 0 }}
                   >
-                    <button className="flex items-center gap-3 text-white/90 hover:bg-white/10 rounded-xl px-3 py-2 transition text-base font-medium" 
+                    <button className="flex items-center cursor-pointer gap-3 text-white/90 hover:bg-white/10 rounded-xl px-3 py-2 transition text-base font-medium" 
                       onClick={e => { e.preventDefault(); handleRename(project.id) }}
                     >
                       <Image src={editIcon} alt="Rename" width={24} height={24} />
                       Rename
                     </button>
                     <button
-                      className="flex items-center gap-3 text-white/90 hover:bg-white/10 rounded-xl px-3 py-2 transition text-base font-medium"
+                      className="flex items-center gap-3 cursor-pointer text-white/90 hover:bg-white/10 rounded-xl px-3 py-2 transition text-base font-medium"
                       onClick={e => { e.preventDefault(); handleArchive(project.id) }}
                     >
                       <Image src={archiveIcon} alt="Archive" width={24} height={24} />
                       Archive
                     </button>
                     <button
-                      className="flex items-center gap-3 text-white/90 hover:bg-white/10 rounded-xl px-3 py-2 transition text-base font-medium"
+                      className="flex items-center gap-3 cursor-pointer text-white/90 hover:bg-white/10 rounded-xl px-3 py-2 transition text-base font-medium"
                       onClick={e => { e.preventDefault(); handleDelete(project.id) }}
                     >
                       <Image src={trashIcon} alt="Delete" width={24} height={24} />

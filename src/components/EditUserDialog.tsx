@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { clxRequest } from "@/shared/lib/api/clxRequest";
 import { parseCookies } from "nookies";
+import { DialogClose } from "@radix-ui/react-dialog";
 
 export type Position = { id: string; name: string; description: string };
 
@@ -40,7 +41,12 @@ type EditUserDialogProps = {
   onSaved?: () => void;
 };
 
-export default function EditUserDialog({ open, user, onOpenChange, onSaved }: EditUserDialogProps) {
+export default function EditUserDialog({
+  open,
+  user,
+  onOpenChange,
+  onSaved,
+}: EditUserDialogProps) {
   const [positions, setPositions] = useState<Position[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<EditFormState>({
@@ -91,7 +97,7 @@ export default function EditUserDialog({ open, user, onOpenChange, onSaved }: Ed
       firstName,
       lastName,
     }));
-  }
+  };
 
   const submit = async () => {
     if (!user) return;
@@ -99,11 +105,15 @@ export default function EditUserDialog({ open, user, onOpenChange, onSaved }: Ed
     const { accessToken } = parseCookies();
     try {
       const payload: Record<string, string | boolean> = {};
-      if (form.firstName && form.firstName !== user.firstName) payload.firstName = form.firstName;
-      if (form.lastName && form.lastName !== user.lastName) payload.lastName = form.lastName;
+      if (form.firstName && form.firstName !== user.firstName)
+        payload.firstName = form.firstName;
+      if (form.lastName && form.lastName !== user.lastName)
+        payload.lastName = form.lastName;
       if (form.email && form.email !== user.email) payload.email = form.email;
-      if (form.position && form.position !== user.position?.id) payload.position = form.position;
-      if (user.role !== "super_admin" && form.isActive !== user.isActive) payload.isActive = form.isActive;
+      if (form.position && form.position !== user.position?.id)
+        payload.position = form.position;
+      if (user.role !== "super_admin" && form.isActive !== user.isActive)
+        payload.isActive = form.isActive;
 
       if (Object.keys(payload).length === 0) {
         onOpenChange(false);
@@ -166,7 +176,7 @@ export default function EditUserDialog({ open, user, onOpenChange, onSaved }: Ed
               <select
                 value={form.position || ""}
                 onChange={(e) => handleField("position", e.target.value)}
-                className="w-full rounded-lg bg-white/10 border-0 py-2 px-3 text-white focus:ring-2 focus:ring-green-500"
+                className="w-full rounded-lg cursor-pointer bg-white/10 border-0 py-2 px-3 text-white focus:ring-2 focus:ring-green-500"
               >
                 <option value="" className="text-black">
                   Select position (optional)
@@ -179,7 +189,7 @@ export default function EditUserDialog({ open, user, onOpenChange, onSaved }: Ed
               </select>
             </div>
             <div className="col-span-2">
-              <label className="block text-sm text-gray-300 mb-1">
+              <label className="block text-sm text-gray-300 mb-1 ">
                 Active status
               </label>
               <select
@@ -189,11 +199,15 @@ export default function EditUserDialog({ open, user, onOpenChange, onSaved }: Ed
                     handleField("isActive", e.target.value === "active");
                   }
                 }}
-                className="w-full rounded-lg bg-white/10 border-0 py-2 px-3 text-white focus:ring-2 focus:ring-green-500"
+                className="w-full cursor-pointer rounded-lg bg-white/10 border-0 py-2 px-3 text-white focus:ring-2 focus:ring-green-500"
                 disabled={isSuperAdmin}
               >
-                <option className="text-black" value="active">Active</option>
-                <option className="text-black" value="inactive">Inactive</option>
+                <option className="text-black cursor-pointer" value="active">
+                  Active
+                </option>
+                <option className="text-black cursor-pointer" value="inactive">
+                  Inactive
+                </option>
               </select>
               {isSuperAdmin && (
                 <div className="text-xs text-gray-400 mt-1">
@@ -208,7 +222,7 @@ export default function EditUserDialog({ open, user, onOpenChange, onSaved }: Ed
             type="button"
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="text-gray-300 hover:text-white hover:bg-gray-700"
+            className="text-gray-300 cursor-pointer hover:text-white hover:bg-gray-700"
             disabled={submitting}
           >
             Cancel
@@ -217,7 +231,7 @@ export default function EditUserDialog({ open, user, onOpenChange, onSaved }: Ed
             type="button"
             onClick={submit}
             disabled={submitting}
-            className="bg-lime-500 hover:bg-lime-600 text-black font-medium"
+            className="bg-lime-500 cursor-pointer hover:bg-lime-600 text-black font-medium"
           >
             {submitting ? "Saving..." : "Save"}
           </Button>

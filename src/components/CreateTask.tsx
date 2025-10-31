@@ -471,7 +471,7 @@ function CreateTask({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="bg-[#00C951] hover:bg-[#00c20a] rounded-3xl text-white px-4 py-2 font-semibold text-sm transition">
+        <button className="bg-[#00C951] cursor-pointer hover:bg-[#00c20a] rounded-3xl text-white px-4 py-2 font-semibold text-sm transition">
           Add new task
         </button>
       </DialogTrigger>
@@ -748,7 +748,7 @@ function CreateTask({
                                 </span>
                                 <button
                                   type="button"
-                                  className="ml-1 text-red-400 hover:text-red-600 text-2xl"
+                                  className="ml-1 text-red-400 hover:text-red-600 text-2xl cursor-pointer"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     removeUser(user.id);
@@ -891,7 +891,7 @@ function CreateTask({
                           Drop files to upload or{" "}
                           <button
                             type="button"
-                            className="text-blue-400 hover:text-blue-300"
+                            className="text-blue-400 cursor-pointer hover:text-blue-300"
                             onClick={() => fileInputRef.current?.click()}
                           >
                             Browse
@@ -1021,7 +1021,7 @@ function CreateTask({
                     />
                     <button
                       type="button"
-                      className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg"
+                      className="bg-green-500 cursor-pointer hover:bg-green-600 text-white p-2 rounded-lg"
                       onClick={handleSendActivity}
                       disabled={!activityInput.trim()}
                     >
@@ -1060,14 +1060,14 @@ function CreateTask({
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
+                className="px-4 py-2 text-gray-300 hover:text-white transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+                className="px-6 py-2 bg-green-500 hover:bg-green-600 cursor-pointer text-white rounded-lg font-medium transition-colors"
               >
                 {isSubmitting ? "Saving..." : "Save"}
               </button>
