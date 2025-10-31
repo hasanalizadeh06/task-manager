@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import { clxRequest } from "@/shared/lib/api/clxRequest";
 import { parseCookies } from "nookies";
-import { DialogClose } from "@radix-ui/react-dialog";
 
 export type Position = { id: string; name: string; description: string };
 

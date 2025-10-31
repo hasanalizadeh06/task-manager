@@ -272,7 +272,6 @@ function Page() {
   }
 
   // fetchEpics / fetchProjects / fetchSprints are stable in this component
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchEpics();
     fetchProjects();

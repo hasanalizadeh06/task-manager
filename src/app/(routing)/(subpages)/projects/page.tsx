@@ -1,27 +1,27 @@
 "use client";
-import React, { useRef } from 'react'
+import React, { useRef } from "react";
 import { useEffect, useState } from "react";
 import { clxRequest } from "@/shared/lib/api/clxRequest";
 import { parseCookies } from "nookies";
 import { ProjectsResponse } from "@/interfaces/Tasks";
-import { CreateProjectDialog } from '@/components/CreateProject';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useRoleStore } from '@/features/auth/model/role.store';
-import { redirect } from 'next/navigation';
+import { CreateProjectDialog } from "@/components/CreateProject";
+import Link from "next/link";
+import Image from "next/image";
+import { useRoleStore } from "@/features/auth/model/role.store";
+import { redirect } from "next/navigation";
 import img from "@/../public/images/avatar.svg";
 import projectImg from "@/../public/images/template-project-logo.png";
-import { formatDate } from '@/shared/lib/date/luxon';
-import { User } from '@/components/TaskList';
+import { formatDate } from "@/shared/lib/date/luxon";
+import { User } from "@/components/TaskList";
 import moreIcon from "@/shared/assets/icons/more.png";
 import editIcon from "@/shared/assets/icons/edit-2.png";
 import archiveIcon from "@/shared/assets/icons/archive.png";
 import trashIcon from "@/shared/assets/icons/trash.png";
 
-
-
 function Page() {
-  const [openDropdownProjectId, setOpenDropdownProjectId] = useState<string | null>(null);
+  const [openDropdownProjectId, setOpenDropdownProjectId] = useState<
+    string | null
+  >(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const role = useRoleStore((s) => s.role);
   if (role !== "admin" && role !== "super_admin") {
@@ -30,44 +30,50 @@ function Page() {
   const [projects, setProjects] = useState<ProjectsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[] | null>([]);
-  
+
   const getProjects = async () => {
     await clxRequest
       .get<ProjectsResponse>("/projects?page=1&limit=1000")
       .then((res) => setProjects(res))
       .finally(() => setLoading(false));
-    }
+  };
 
   const handleArchive = async (projectId: string) => {
-    if (!window.confirm("Are you sure you want to archive this project?")) return;
+    if (!window.confirm("Are you sure you want to archive this project?"))
+      return;
     if (!projectId) return;
     const accessToken = parseCookies().accessToken;
     try {
-      await clxRequest.post("/archive", {
-        type: "project",
-        relationId: projectId,
-      }, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
+      await clxRequest.post(
+        "/archive",
+        {
+          type: "project",
+          relationId: projectId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         }
-      });
+      );
       await getProjects();
       setOpenDropdownProjectId(null);
     } catch (err) {
       console.error(err);
       alert("Failed to archive project");
     }
-  }
+  };
 
   const handleDelete = async (projectId: string) => {
-    if (!window.confirm("Are you sure you want to delete this project?")) return;
+    if (!window.confirm("Are you sure you want to delete this project?"))
+      return;
     if (!projectId) return;
     const accessToken = parseCookies().accessToken;
     try {
       await clxRequest.delete(`/projects/${projectId}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
-        }
+        },
       });
       await getProjects();
       setOpenDropdownProjectId(null);
@@ -75,7 +81,7 @@ function Page() {
       console.error(err);
       alert("Failed to delete project");
     }
-  }
+  };
 
   const handleRename = async (projectId: string) => {
     const newTitle = window.prompt("Enter new project title:");
@@ -83,28 +89,31 @@ function Page() {
     if (!projectId) return;
     const accessToken = parseCookies().accessToken;
     try {
-      await clxRequest.patch(`/projects/${projectId}`, {
-        title: newTitle
-      }, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
+      await clxRequest.patch(
+        `/projects/${projectId}`,
+        {
+          title: newTitle,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         }
-      });
+      );
       await getProjects();
       setOpenDropdownProjectId(null);
-    }
-    catch (err) {
+    } catch (err) {
       console.error(err);
       alert("Failed to rename project");
     }
-  }
+  };
 
   const getUsers = async () => {
     await clxRequest
-      .get<{items: User[]}>("/users?page=1&limit=1000")
+      .get<{ items: User[] }>("/users?page=1&limit=1000")
       .then((res) => setUsers(res.items))
       .finally(() => setLoading(false));
-  }
+  };
 
   useEffect(() => {
     getUsers();
@@ -138,7 +147,10 @@ function Page() {
         ) : projects?.items.length ? (
           projects.items.map((project) => (
             <div className="relative" key={project.id}>
-              <div className="absolute top-4 right-4 flex flex-col items-end" ref={dropdownRef}>
+              <div
+                className="absolute top-4 right-4 flex flex-col items-end"
+                ref={dropdownRef}
+              >
                 <button
                   className="text-white/70 cursor-pointer hover:bg-white/10 rounded-full p-1 transition z-40"
                   style={{ position: "relative" }}
@@ -156,26 +168,56 @@ function Page() {
                 {openDropdownProjectId === project.id && (
                   <div
                     className="z-30 bg-[#ffffff1a] rounded-2xl shadow-lg flex flex-col p-2 gap-2 min-w-[140px] backdrop-blur-md mt-2"
-                    style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.18)", position: "absolute", top: "100%", right: 0 }}
+                    style={{
+                      boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
+                      position: "absolute",
+                      top: "100%",
+                      right: 0,
+                    }}
                   >
-                    <button className="flex items-center cursor-pointer gap-3 text-white/90 hover:bg-white/10 rounded-xl px-3 py-2 transition text-base font-medium" 
-                      onClick={e => { e.preventDefault(); handleRename(project.id) }}
+                    <button
+                      className="flex items-center cursor-pointer gap-3 text-white/90 hover:bg-white/10 rounded-xl px-3 py-2 transition text-base font-medium"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleRename(project.id);
+                      }}
                     >
-                      <Image src={editIcon} alt="Rename" width={24} height={24} />
+                      <Image
+                        src={editIcon}
+                        alt="Rename"
+                        width={24}
+                        height={24}
+                      />
                       Rename
                     </button>
                     <button
                       className="flex items-center gap-3 cursor-pointer text-white/90 hover:bg-white/10 rounded-xl px-3 py-2 transition text-base font-medium"
-                      onClick={e => { e.preventDefault(); handleArchive(project.id) }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleArchive(project.id);
+                      }}
                     >
-                      <Image src={archiveIcon} alt="Archive" width={24} height={24} />
+                      <Image
+                        src={archiveIcon}
+                        alt="Archive"
+                        width={24}
+                        height={24}
+                      />
                       Archive
                     </button>
                     <button
                       className="flex items-center gap-3 cursor-pointer text-white/90 hover:bg-white/10 rounded-xl px-3 py-2 transition text-base font-medium"
-                      onClick={e => { e.preventDefault(); handleDelete(project.id) }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleDelete(project.id);
+                      }}
                     >
-                      <Image src={trashIcon} alt="Delete" width={24} height={24} />
+                      <Image
+                        src={trashIcon}
+                        alt="Delete"
+                        width={24}
+                        height={24}
+                      />
                       Delete
                     </button>
                   </div>
