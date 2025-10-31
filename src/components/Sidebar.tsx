@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
 
-import "@/shared/assets/css/global.css";
 import project_logo from "@/../public/images/template-project-logo.png";
 
 import { ProjectsResponse } from "@/interfaces/Tasks";
