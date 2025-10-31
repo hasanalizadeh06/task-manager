@@ -28,8 +28,8 @@ function AuthPage({ type }: AuthPageProps) {
   }, [searchParams, router]);
   const [form, setForm] = useState({
     fullName: "",
-    email: "",
-    password: "",
+    email: "admin@gmail.com",
+    password: "Admin123",
     repeatPassword: "",
   });
   const [error, setError] = useState("");
